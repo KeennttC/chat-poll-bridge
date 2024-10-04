@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -76,14 +77,39 @@ const Login = () => {
           </form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
-          <Button variant="outline" className="w-full border-violet-500 text-violet-700 hover:bg-violet-100">
+          <Button variant="outline" className="w-full border-violet-500 text-violet-700 hover:bg-violet-100" onClick={() => navigate('/signup')}>
             Sign up
           </Button>
           <div className="text-xs text-center text-gray-600">
             By continuing, you agree to our{' '}
-            <a href="#" className="text-violet-700 hover:underline">Terms of Service</a>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="link" className="p-0 text-violet-700 hover:underline">Terms of Service</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Terms of Service</DialogTitle>
+                  <DialogDescription>
+                    This is a generalized terms of service. By using our service, you agree to abide by our rules and regulations. We reserve the right to modify or terminate the service for any reason, without notice at any time.
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
             {' '}and have read our{' '}
-            <a href="#" className="text-violet-700 hover:underline">Privacy Policy</a>.
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="link" className="p-0 text-violet-700 hover:underline">Privacy Policy</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Privacy Policy</DialogTitle>
+                  <DialogDescription>
+                    This is a generalized privacy policy. We collect and use personal information to provide and improve our service. By using our service, you agree to the collection and use of information in accordance with this policy.
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+            .
           </div>
         </CardFooter>
       </Card>

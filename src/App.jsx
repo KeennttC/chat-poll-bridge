@@ -3,6 +3,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ChatProvider } from "./contexts/ChatContext";
 import { PollProvider } from "./contexts/PollContext";
 import Login from "./components/Login";
+import SignUp from "./components/SignUp";
 import Dashboard from "./components/Dashboard";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +21,7 @@ const App = () => (
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Login />} />
+                <Route path="/signup" element={<SignUp />} />
                 <Route path="/dashboard" element={<Dashboard />} />
               </Routes>
             </BrowserRouter>
