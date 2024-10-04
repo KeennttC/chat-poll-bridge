@@ -10,14 +10,14 @@ export const ChatProvider = ({ children }) => {
   const [typingUsers, setTypingUsers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [socket, setSocket] = useState(null);
-  const { user } = useAuth();
+  const auth = useAuth();
 
   useEffect(() => {
     // In a real app, you'd connect to a real WebSocket server
     const mockSocket = {
       send: (message) => {
         if (typeof message === 'string') {
-          broadcastMessage({ text: message, sender: user?.username || 'Anonymous' });
+          broadcastMessage({ text: message, sender: auth.user?.username || 'Anonymous' });
         } else if (message.type === 'typing') {
           handleTyping(message);
         } else if (message.type === 'userStatus') {
@@ -27,23 +27,23 @@ export const ChatProvider = ({ children }) => {
     };
     setSocket(mockSocket);
 
-    if (user) {
-      mockSocket.send({ type: 'userStatus', user: user.username, status: 'online' });
+    if (auth.user) {
+      mockSocket.send({ type: 'userStatus', user: auth.user.username, status: 'online' });
     }
 
     return () => {
-      if (user) {
-        mockSocket.send({ type: 'userStatus', user: user.username, status: 'offline' });
+      if (auth.user) {
+        mockSocket.send({ type: 'userStatus', user: auth.user.username, status: 'offline' });
       }
     };
-  }, [user]);
+  }, [auth.user]);
 
   const broadcastMessage = (message) => {
     setMessages(prev => [...prev, message]);
   };
 
   const sendMessage = (message) => {
-    if (socket && user) {
+    if (socket && auth.user) {
       socket.send(message);
     }
   };
@@ -67,8 +67,8 @@ export const ChatProvider = ({ children }) => {
   };
 
   const setTyping = (isTyping) => {
-    if (socket && user) {
-      socket.send({ type: 'typing', user: user.username, isTyping });
+    if (socket && auth.user) {
+      socket.send({ type: 'typing', user: auth.user.username, isTyping });
     }
   };
 
