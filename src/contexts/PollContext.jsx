@@ -17,6 +17,17 @@ export const PollProvider = ({ children }) => {
     votedUsers: [],
   });
 
+  const [iconPollData, setIconPollData] = useState({
+    question: "What's your favorite activity?",
+    options: [
+      { id: 1, text: "Coffee", votes: 0 },
+      { id: 2, text: "Pizza", votes: 0 },
+      { id: 3, text: "Gamepad", votes: 0 },
+      { id: 4, text: "Book", votes: 0 },
+    ],
+    votedUsers: [],
+  });
+
   const vote = (optionId) => {
     if (user && !pollData.votedUsers.includes(user.username)) {
       setPollData(prevData => ({
@@ -29,10 +40,23 @@ export const PollProvider = ({ children }) => {
     }
   };
 
+  const voteIcon = (optionId) => {
+    if (user && !iconPollData.votedUsers.includes(user.username)) {
+      setIconPollData(prevData => ({
+        ...prevData,
+        options: prevData.options.map(option =>
+          option.id === optionId ? { ...option, votes: option.votes + 1 } : option
+        ),
+        votedUsers: [...prevData.votedUsers, user.username],
+      }));
+    }
+  };
+
   const hasVoted = user ? pollData.votedUsers.includes(user.username) : false;
+  const hasVotedIcon = user ? iconPollData.votedUsers.includes(user.username) : false;
 
   return (
-    <PollContext.Provider value={{ pollData, vote, hasVoted }}>
+    <PollContext.Provider value={{ pollData, vote, hasVoted, iconPollData, voteIcon, hasVotedIcon }}>
       {children}
     </PollContext.Provider>
   );
