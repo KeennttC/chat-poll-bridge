@@ -20,7 +20,7 @@ const Chat = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (message.trim()) {
+    if (message.trim() && user) {
       sendMessage(message);
       setMessage('');
       setTyping(false);
@@ -29,8 +29,23 @@ const Chat = () => {
 
   const handleTyping = (e) => {
     setMessage(e.target.value);
-    setTyping(e.target.value.length > 0);
+    if (user) {
+      setTyping(e.target.value.length > 0);
+    }
   };
+
+  if (!user) {
+    return (
+      <Card className="bg-white/80 backdrop-blur-sm shadow-lg flex flex-col h-[600px]">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold text-purple-800">Chat Room</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-grow flex items-center justify-center">
+          <p className="text-gray-500">Please log in to access the chat.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-white/80 backdrop-blur-sm shadow-lg flex flex-col h-[600px]">

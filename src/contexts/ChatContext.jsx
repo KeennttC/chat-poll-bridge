@@ -16,7 +16,7 @@ export const ChatProvider = ({ children }) => {
     const mockSocket = {
       send: (message) => {
         if (typeof message === 'string') {
-          setMessages(prev => [...prev, { text: message, sender: user.username }]);
+          setMessages(prev => [...prev, { text: message, sender: user?.username || 'Anonymous' }]);
         } else if (message.type === 'typing') {
           handleTyping(message);
         }
@@ -30,7 +30,7 @@ export const ChatProvider = ({ children }) => {
   }, [user]);
 
   const sendMessage = (message) => {
-    if (socket) {
+    if (socket && user) {
       socket.send(message);
     }
   };
@@ -44,7 +44,7 @@ export const ChatProvider = ({ children }) => {
   };
 
   const setTyping = (isTyping) => {
-    if (socket) {
+    if (socket && user) {
       socket.send({ type: 'typing', user: user.username, isTyping });
     }
   };
