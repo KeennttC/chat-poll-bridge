@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = (userData) => {
     // In a real app, you'd validate credentials here
-    setUser(userData);
+    setUser({ ...userData, role: userData.role || 'student' });
   };
 
   const logout = () => {

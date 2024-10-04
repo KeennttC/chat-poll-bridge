@@ -1,10 +1,12 @@
 import React, { createContext, useState, useContext } from 'react';
+import { useAuth } from './AuthContext';
 
 const PollContext = createContext();
 
 export const usePoll = () => useContext(PollContext);
 
 export const PollProvider = ({ children }) => {
+  const { user } = useAuth();
   const [pollData, setPollData] = useState({
     question: "What's your favorite color?",
     options: [
@@ -12,19 +14,25 @@ export const PollProvider = ({ children }) => {
       { id: 2, text: "Blue", votes: 0 },
       { id: 3, text: "Green", votes: 0 },
     ],
+    votedUsers: [],
   });
 
   const vote = (optionId) => {
-    setPollData(prevData => ({
-      ...prevData,
-      options: prevData.options.map(option =>
-        option.id === optionId ? { ...option, votes: option.votes + 1 } : option
-      ),
-    }));
+    if (user && !pollData.votedUsers.includes(user.username)) {
+      setPollData(prevData => ({
+        ...prevData,
+        options: prevData.options.map(option =>
+          option.id === optionId ? { ...option, votes: option.votes + 1 } : option
+        ),
+        votedUsers: [...prevData.votedUsers, user.username],
+      }));
+    }
   };
 
+  const hasVoted = user ? pollData.votedUsers.includes(user.username) : false;
+
   return (
-    <PollContext.Provider value={{ pollData, vote }}>
+    <PollContext.Provider value={{ pollData, vote, hasVoted }}>
       {children}
     </PollContext.Provider>
   );
