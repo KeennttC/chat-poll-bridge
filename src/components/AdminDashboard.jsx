@@ -2,12 +2,13 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 const AdminDashboard = () => {
-  const { users } = useAuth();
+  const { users, removeUser } = useAuth();
 
   return (
-    <Card className="w-full">
+    <Card className="w-full mb-8">
       <CardHeader>
         <CardTitle>Registered Users</CardTitle>
       </CardHeader>
@@ -17,6 +18,7 @@ const AdminDashboard = () => {
             <TableRow>
               <TableHead>Username</TableHead>
               <TableHead>Role</TableHead>
+              <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -24,6 +26,13 @@ const AdminDashboard = () => {
               <TableRow key={index}>
                 <TableCell>{user.username}</TableCell>
                 <TableCell>{user.role}</TableCell>
+                <TableCell>
+                  {user.role !== 'admin' && (
+                    <Button onClick={() => removeUser(user.username)} variant="destructive" size="sm">
+                      Remove
+                    </Button>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

@@ -31,8 +31,14 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const removeUser = (username) => {
+    if (user?.role === 'admin') {
+      setUsers(users.filter(u => u.username !== username));
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, users, login, logout, register }}>
+    <AuthContext.Provider value={{ user, users, login, logout, register, removeUser }}>
       {children}
     </AuthContext.Provider>
   );

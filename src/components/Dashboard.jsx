@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Chat from './Chat';
 import IconPoll from './IconPoll';
 import AdminDashboard from './AdminDashboard';
+import UserList from './UserList';
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { LogOut } from 'lucide-react';
@@ -28,9 +29,14 @@ const Dashboard = () => {
 
         {user?.role === 'admin' && <AdminDashboard />}
 
-        <div className="space-y-8">
-          <Chat />
-          <IconPoll />
+        <div className="grid grid-cols-3 gap-8">
+          <div className="col-span-2 space-y-8">
+            <Chat />
+            <IconPoll />
+          </div>
+          <div className="col-span-1">
+            <UserList />
+          </div>
         </div>
       </div>
       
