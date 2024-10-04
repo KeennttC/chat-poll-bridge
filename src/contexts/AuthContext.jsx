@@ -6,10 +6,25 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [users, setUsers] = useState([
+    { username: 'student1', password: 'password123', role: 'student' },
+    { username: 'admin1', password: 'adminpass', role: 'admin' },
+  ]);
 
-  const login = (userData) => {
-    // In a real app, you'd validate credentials here
-    setUser({ ...userData, role: userData.role || 'student' });
+  const register = (userData) => {
+    if (users.some(user => user.username === userData.username)) {
+      throw new Error('Username already exists');
+    }
+    setUsers([...users, userData]);
+  };
+
+  const login = (username, password) => {
+    const user = users.find(u => u.username === username && u.password === password);
+    if (user) {
+      setUser({ username: user.username, role: user.role });
+      return true;
+    }
+    return false;
   };
 
   const logout = () => {
@@ -17,7 +32,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );
