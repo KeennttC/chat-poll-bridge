@@ -1,7 +1,6 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Chat from './Chat';
-import Poll from './Poll';
 import IconPoll from './IconPoll';
 import AdminDashboard from './AdminDashboard';
 import { Button } from "@/components/ui/button";
@@ -26,13 +25,8 @@ const Dashboard = () => {
         {user?.role === 'admin' && <AdminDashboard />}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="space-y-8">
-            <Chat />
-            <IconPoll />
-          </div>
-          <div className="space-y-8">
-            <Poll />
-          </div>
+          <Chat />
+          <IconPoll />
         </div>
       </div>
     </div>
