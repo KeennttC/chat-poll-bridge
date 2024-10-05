@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ChatProvider } from "./contexts/ChatContext";
 import { PollProvider } from "./contexts/PollContext";
@@ -18,13 +18,11 @@ const App = () => (
         <PollProvider>
           <TooltipProvider>
             <Toaster />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Login />} />
-                <Route path="/signup" element={<SignUp />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-              </Routes>
-            </BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+            </Routes>
           </TooltipProvider>
         </PollProvider>
       </ChatProvider>
