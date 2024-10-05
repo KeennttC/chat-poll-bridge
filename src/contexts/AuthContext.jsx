@@ -34,8 +34,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const resetPassword = (username, newPassword) => {
+    const userIndex = users.findIndex(u => u.username === username);
+    if (userIndex !== -1) {
+      const updatedUsers = [...users];
+      updatedUsers[userIndex] = { ...updatedUsers[userIndex], password: newPassword };
+      setUsers(updatedUsers);
+      return true;
+    }
+    return false;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, users, login, logout, register, removeUser }}>
+    <AuthContext.Provider value={{ user, users, login, logout, register, removeUser, resetPassword }}>
       {children}
     </AuthContext.Provider>
   );
