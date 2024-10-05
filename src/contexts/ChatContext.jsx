@@ -14,53 +14,43 @@ export const ChatProvider = ({ children }) => {
   const { user } = useAuth();
 
   useEffect(() => {
-    // Connect to the WebSocket server
-    const newSocket = io('http://localhost:3001'); // Replace with your server URL
+    const newSocket = io('http://localhost:3001');
     setSocket(newSocket);
 
-    // Clean up on unmount
     return () => newSocket.close();
   }, []);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !user) return;
 
-    // Listen for incoming messages
     socket.on('message', (message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
     });
 
-    // Listen for typing events
     socket.on('typing', ({ username, isTyping }) => {
       setTypingUsers((prevTypingUsers) => {
         if (isTyping) {
           return [...new Set([...prevTypingUsers, username])];
         } else {
-          return prevTypingUsers.filter((user) => user !== username);
+          return prevTypingUsers.filter((u) => u !== username);
         }
       });
     });
 
-    // Listen for user status changes
     socket.on('userStatus', ({ username, status }) => {
       setOnlineUsers((prevOnlineUsers) => {
         if (status === 'online') {
           return [...new Set([...prevOnlineUsers, username])];
         } else {
-          return prevOnlineUsers.filter((user) => user !== username);
+          return prevOnlineUsers.filter((u) => u !== username);
         }
       });
     });
 
-    // Emit user status when logging in or out
-    if (user) {
-      socket.emit('userStatus', { username: user.username, status: 'online' });
-    }
+    socket.emit('userStatus', { username: user.username, status: 'online' });
 
     return () => {
-      if (user) {
-        socket.emit('userStatus', { username: user.username, status: 'offline' });
-      }
+      socket.emit('userStatus', { username: user.username, status: 'offline' });
       socket.off('message');
       socket.off('typing');
       socket.off('userStatus');
@@ -71,6 +61,7 @@ export const ChatProvider = ({ children }) => {
     if (socket && user) {
       const message = { text, sender: user.username };
       socket.emit('message', message);
+      setMessages((prevMessages) => [...prevMessages, message]);
     }
   };
 

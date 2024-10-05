@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Send, User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Chat = () => {
   const [message, setMessage] = useState('');
@@ -55,6 +56,11 @@ const Chat = () => {
       <CardContent className="flex-grow overflow-y-auto space-y-4 p-4">
         {messages.map((msg, index) => (
           <div key={index} className={`flex ${msg.sender === user.username ? 'justify-end' : 'justify-start'}`}>
+            {msg.sender !== user.username && (
+              <Avatar className="mr-2">
+                <AvatarFallback>{msg.sender[0].toUpperCase()}</AvatarFallback>
+              </Avatar>
+            )}
             <div className={`p-3 rounded-lg max-w-[70%] ${
               msg.sender === user.username 
                 ? 'bg-purple-500 text-white rounded-br-none' 
@@ -63,6 +69,11 @@ const Chat = () => {
               <p className="font-semibold mb-1">{msg.sender}</p>
               <p>{msg.text}</p>
             </div>
+            {msg.sender === user.username && (
+              <Avatar className="ml-2">
+                <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
+              </Avatar>
+            )}
           </div>
         ))}
         <div ref={messagesEndRef} />
