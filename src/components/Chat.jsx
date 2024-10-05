@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useChat } from '../contexts/ChatContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Send, User } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Send } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from 'date-fns';
 
@@ -13,14 +12,6 @@ const Chat = () => {
   const [message, setMessage] = useState('');
   const { messages, sendMessage, typingUsers, setTyping, onlineUsers } = useChat();
   const { user } = useAuth();
-  const scrollAreaRef = useRef(null);
-  const lastMessageRef = useRef(null);
-
-  useEffect(() => {
-    if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -59,37 +50,9 @@ const Chat = () => {
           Online Users: {onlineUsers.join(', ')}
         </div>
       </CardHeader>
-      <ScrollArea ref={scrollAreaRef} className="flex-grow p-4">
+      <ScrollArea className="flex-grow p-4">
         {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex mb-4 ${msg.sender === user.username ? 'justify-end' : 'justify-start'}`}
-            ref={index === messages.length - 1 ? lastMessageRef : null}
-          >
-            {msg.sender !== user.username && (
-              <Avatar className="mr-2">
-                <AvatarFallback>{msg.sender[0].toUpperCase()}</AvatarFallback>
-              </Avatar>
-            )}
-            <div className={`p-3 rounded-lg max-w-[70%] ${
-              msg.sender === user.username 
-                ? 'bg-purple-500 text-white rounded-br-none' 
-                : 'bg-white text-gray-800 rounded-bl-none'
-            }`}>
-              <div className="flex justify-between items-baseline mb-1">
-                <span className="font-semibold">{msg.sender}</span>
-                <span className="text-xs opacity-50 ml-2">
-                  {format(new Date(msg.timestamp), 'HH:mm')}
-                </span>
-              </div>
-              <p>{msg.text}</p>
-            </div>
-            {msg.sender === user.username && (
-              <Avatar className="ml-2">
-                <AvatarFallback>{user.username[0].toUpperCase()}</AvatarFallback>
-              </Avatar>
-            )}
-          </div>
+          <MessageBubble key={index} message={msg} isCurrentUser={msg.sender === user.username} />
         ))}
       </ScrollArea>
       <CardFooter className="border-t bg-white">
@@ -114,5 +77,31 @@ const Chat = () => {
     </Card>
   );
 };
+
+const MessageBubble = ({ message, isCurrentUser }) => (
+  <div className={`flex mb-4 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+    {!isCurrentUser && <UserAvatar username={message.sender} />}
+    <div className={`p-3 rounded-lg max-w-[70%] ${
+      isCurrentUser 
+        ? 'bg-purple-500 text-white rounded-br-none' 
+        : 'bg-white text-gray-800 rounded-bl-none'
+    }`}>
+      <div className="flex justify-between items-baseline mb-1">
+        <span className="font-semibold">{message.sender}</span>
+        <span className="text-xs opacity-50 ml-2">
+          {format(new Date(message.timestamp), 'HH:mm')}
+        </span>
+      </div>
+      <p>{message.text}</p>
+    </div>
+    {isCurrentUser && <UserAvatar username={message.sender} />}
+  </div>
+);
+
+const UserAvatar = ({ username }) => (
+  <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-semibold mr-2">
+    {username[0].toUpperCase()}
+  </div>
+);
 
 export default Chat;
