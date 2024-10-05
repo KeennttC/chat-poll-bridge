@@ -23,6 +23,18 @@ export const ChatProvider = ({ children }) => {
   useEffect(() => {
     if (!socket || !user) return;
 
+    const handleConnect = () => {
+      console.log('Connected to server');
+      socket.emit('userStatus', { username: user.username, status: 'online' });
+    };
+
+    const handleDisconnect = () => {
+      console.log('Disconnected from server');
+    };
+
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', handleDisconnect);
+
     socket.on('message', (message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
     });
@@ -47,10 +59,10 @@ export const ChatProvider = ({ children }) => {
       });
     });
 
-    socket.emit('userStatus', { username: user.username, status: 'online' });
-
     return () => {
       socket.emit('userStatus', { username: user.username, status: 'offline' });
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', handleDisconnect);
       socket.off('message');
       socket.off('typing');
       socket.off('userStatus');
@@ -59,7 +71,7 @@ export const ChatProvider = ({ children }) => {
 
   const sendMessage = (text) => {
     if (socket && user) {
-      const message = { text, sender: user.username };
+      const message = { text, sender: user.username, timestamp: new Date().toISOString() };
       socket.emit('message', message);
       setMessages((prevMessages) => [...prevMessages, message]);
     }

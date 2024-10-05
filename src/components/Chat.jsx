@@ -6,18 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Send, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { format } from 'date-fns';
 
 const Chat = () => {
   const [message, setMessage] = useState('');
-  const { messages, sendMessage, typingUsers, setTyping } = useChat();
+  const { messages, sendMessage, typingUsers, setTyping, onlineUsers } = useChat();
   const { user } = useAuth();
-  const messagesEndRef = useRef(null);
+  const scrollAreaRef = useRef(null);
+  const lastMessageRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(scrollToBottom, [messages]);
+  useEffect(() => {
+    if (lastMessageRef.current) {
+      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -52,10 +55,17 @@ const Chat = () => {
     <Card className="bg-gray-100 shadow-lg flex flex-col h-[600px]">
       <CardHeader className="bg-purple-600 text-white">
         <CardTitle className="text-2xl font-bold">Chat Room</CardTitle>
+        <div className="text-sm">
+          Online Users: {onlineUsers.join(', ')}
+        </div>
       </CardHeader>
-      <CardContent className="flex-grow overflow-y-auto space-y-4 p-4">
+      <ScrollArea ref={scrollAreaRef} className="flex-grow p-4">
         {messages.map((msg, index) => (
-          <div key={index} className={`flex ${msg.sender === user.username ? 'justify-end' : 'justify-start'}`}>
+          <div
+            key={index}
+            className={`flex mb-4 ${msg.sender === user.username ? 'justify-end' : 'justify-start'}`}
+            ref={index === messages.length - 1 ? lastMessageRef : null}
+          >
             {msg.sender !== user.username && (
               <Avatar className="mr-2">
                 <AvatarFallback>{msg.sender[0].toUpperCase()}</AvatarFallback>
@@ -66,7 +76,12 @@ const Chat = () => {
                 ? 'bg-purple-500 text-white rounded-br-none' 
                 : 'bg-white text-gray-800 rounded-bl-none'
             }`}>
-              <p className="font-semibold mb-1">{msg.sender}</p>
+              <div className="flex justify-between items-baseline mb-1">
+                <span className="font-semibold">{msg.sender}</span>
+                <span className="text-xs opacity-50 ml-2">
+                  {format(new Date(msg.timestamp), 'HH:mm')}
+                </span>
+              </div>
               <p>{msg.text}</p>
             </div>
             {msg.sender === user.username && (
@@ -76,8 +91,7 @@ const Chat = () => {
             )}
           </div>
         ))}
-        <div ref={messagesEndRef} />
-      </CardContent>
+      </ScrollArea>
       <CardFooter className="border-t bg-white">
         {typingUsers.length > 0 && (
           <div className="text-sm text-gray-500 mb-2">
