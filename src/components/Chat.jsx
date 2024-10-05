@@ -75,8 +75,8 @@ const Chat = () => {
           <MessageBubble key={index} message={msg} isCurrentUser={msg.sender === user.username} />
         ))}
       </ScrollArea>
-      <CardFooter className="border-t bg-white">
-        <TypingIndicator typingUsers={typingUsers} />
+      <CardFooter className="border-t bg-white flex-col items-start">
+        <TypingIndicator typingUsers={typingUsers.filter(u => u !== user.username)} />
         <form onSubmit={handleSubmit} className="flex w-full">
           <Input
             type="text"
@@ -122,8 +122,15 @@ const UserAvatar = ({ username }) => (
 
 const TypingIndicator = ({ typingUsers }) => (
   <div className="text-sm text-gray-500 mb-2">
-    {typingUsers.map((user, index) => (
-      <div key={user} className="flex items-center">
+    {typingUsers.map((user) => (
+      <motion.div
+        key={user}
+        className="flex items-center"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -10 }}
+        transition={{ duration: 0.3 }}
+      >
         <span>{user} is typing</span>
         <motion.div
           className="flex ml-2"
@@ -135,7 +142,7 @@ const TypingIndicator = ({ typingUsers }) => (
           <div className="w-1 h-1 bg-gray-500 rounded-full mr-1"></div>
           <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
         </motion.div>
-      </div>
+      </motion.div>
     ))}
   </div>
 );
