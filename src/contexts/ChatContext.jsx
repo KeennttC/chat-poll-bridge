@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import io from 'socket.io-client';
 
 const ChatContext = createContext();
 
@@ -10,65 +11,72 @@ export const ChatProvider = ({ children }) => {
   const [typingUsers, setTypingUsers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [socket, setSocket] = useState(null);
-  const auth = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
-    // In a real app, you'd connect to a real WebSocket server
-    const mockSocket = {
-      send: (message) => {
-        if (typeof message === 'string') {
-          broadcastMessage({ text: message, sender: auth.user?.username || 'Anonymous' });
-        } else if (message.type === 'typing') {
-          handleTyping(message);
-        } else if (message.type === 'userStatus') {
-          handleUserStatus(message);
-        }
-      }
-    };
-    setSocket(mockSocket);
+    // Connect to the WebSocket server
+    const newSocket = io('http://localhost:3001'); // Replace with your server URL
+    setSocket(newSocket);
 
-    if (auth.user) {
-      mockSocket.send({ type: 'userStatus', user: auth.user.username, status: 'online' });
+    // Clean up on unmount
+    return () => newSocket.close();
+  }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    // Listen for incoming messages
+    socket.on('message', (message) => {
+      setMessages((prevMessages) => [...prevMessages, message]);
+    });
+
+    // Listen for typing events
+    socket.on('typing', ({ username, isTyping }) => {
+      setTypingUsers((prevTypingUsers) => {
+        if (isTyping) {
+          return [...new Set([...prevTypingUsers, username])];
+        } else {
+          return prevTypingUsers.filter((user) => user !== username);
+        }
+      });
+    });
+
+    // Listen for user status changes
+    socket.on('userStatus', ({ username, status }) => {
+      setOnlineUsers((prevOnlineUsers) => {
+        if (status === 'online') {
+          return [...new Set([...prevOnlineUsers, username])];
+        } else {
+          return prevOnlineUsers.filter((user) => user !== username);
+        }
+      });
+    });
+
+    // Emit user status when logging in or out
+    if (user) {
+      socket.emit('userStatus', { username: user.username, status: 'online' });
     }
 
     return () => {
-      if (auth.user) {
-        mockSocket.send({ type: 'userStatus', user: auth.user.username, status: 'offline' });
+      if (user) {
+        socket.emit('userStatus', { username: user.username, status: 'offline' });
       }
+      socket.off('message');
+      socket.off('typing');
+      socket.off('userStatus');
     };
-  }, [auth.user]);
+  }, [socket, user]);
 
-  const broadcastMessage = (message) => {
-    setMessages(prev => [...prev, message]);
-  };
-
-  const sendMessage = (message) => {
-    if (socket && auth.user) {
-      socket.send(message);
+  const sendMessage = (text) => {
+    if (socket && user) {
+      const message = { text, sender: user.username };
+      socket.emit('message', message);
     }
-  };
-
-  const handleTyping = (typingInfo) => {
-    if (typingInfo.isTyping) {
-      setTypingUsers(prev => [...prev.filter(u => u !== typingInfo.user), typingInfo.user]);
-    } else {
-      setTypingUsers(prev => prev.filter(u => u !== typingInfo.user));
-    }
-  };
-
-  const handleUserStatus = (statusInfo) => {
-    setOnlineUsers(prev => {
-      const newUsers = prev.filter(u => u !== statusInfo.user);
-      if (statusInfo.status === 'online') {
-        newUsers.push(statusInfo.user);
-      }
-      return newUsers;
-    });
   };
 
   const setTyping = (isTyping) => {
-    if (socket && auth.user) {
-      socket.send({ type: 'typing', user: auth.user.username, isTyping });
+    if (socket && user) {
+      socket.emit('typing', { username: user.username, isTyping });
     }
   };
 

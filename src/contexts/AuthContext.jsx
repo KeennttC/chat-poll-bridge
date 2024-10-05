@@ -6,10 +6,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [users, setUsers] = useState([
-    { username: 'student1', password: 'password123', role: 'student' },
-    { username: 'admin1', password: 'adminpass', role: 'admin' },
-  ]);
+  const [users, setUsers] = useState([]);
 
   const register = (userData) => {
     if (users.some(user => user.username === userData.username)) {
