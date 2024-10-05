@@ -22,8 +22,8 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 p-8 relative">
       <div className="container mx-auto max-w-6xl">
         <Card className="mb-8 bg-white/80 backdrop-blur-sm shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-3xl font-bold text-purple-800">Welcome, {user?.username}!</CardTitle>
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold text-purple-800">Dashboard</CardTitle>
           </CardHeader>
         </Card>
 

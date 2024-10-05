@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useChat } from '../contexts/ChatContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from "@/components/ui/button";
@@ -7,11 +7,21 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { Send } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from 'date-fns';
+import { motion } from "framer-motion";
 
 const Chat = () => {
   const [message, setMessage] = useState('');
+  const [showWelcome, setShowWelcome] = useState(true);
   const { messages, sendMessage, typingUsers, setTyping, onlineUsers } = useChat();
   const { user } = useAuth();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowWelcome(false);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -33,7 +43,7 @@ const Chat = () => {
     return (
       <Card className="bg-white/80 backdrop-blur-sm shadow-lg flex flex-col h-[600px]">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-purple-800">Chat Room</CardTitle>
+          <CardTitle className="text-2xl font-bold text-purple-800 text-center">Chat Room</CardTitle>
         </CardHeader>
         <CardContent className="flex-grow flex items-center justify-center">
           <p className="text-gray-500">Please log in to access the chat.</p>
@@ -45,10 +55,20 @@ const Chat = () => {
   return (
     <Card className="bg-gray-100 shadow-lg flex flex-col h-[600px]">
       <CardHeader className="bg-purple-600 text-white">
-        <CardTitle className="text-2xl font-bold">Chat Room</CardTitle>
-        <div className="text-sm">
+        <CardTitle className="text-2xl font-bold text-center">Chat Room</CardTitle>
+        <div className="text-sm text-center">
           Online Users: {onlineUsers.join(', ')}
         </div>
+        {showWelcome && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="text-center mt-2"
+          >
+            Welcome, {user.username}!
+          </motion.div>
+        )}
       </CardHeader>
       <ScrollArea className="flex-grow p-4">
         {messages.map((msg, index) => (
@@ -56,11 +76,7 @@ const Chat = () => {
         ))}
       </ScrollArea>
       <CardFooter className="border-t bg-white">
-        {typingUsers.length > 0 && (
-          <div className="text-sm text-gray-500 mb-2">
-            {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
-          </div>
-        )}
+        <TypingIndicator typingUsers={typingUsers} />
         <form onSubmit={handleSubmit} className="flex w-full">
           <Input
             type="text"
@@ -101,6 +117,26 @@ const MessageBubble = ({ message, isCurrentUser }) => (
 const UserAvatar = ({ username }) => (
   <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-semibold mr-2">
     {username[0].toUpperCase()}
+  </div>
+);
+
+const TypingIndicator = ({ typingUsers }) => (
+  <div className="text-sm text-gray-500 mb-2">
+    {typingUsers.map((user, index) => (
+      <div key={user} className="flex items-center">
+        <span>{user} is typing</span>
+        <motion.div
+          className="flex ml-2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+        >
+          <div className="w-1 h-1 bg-gray-500 rounded-full mr-1"></div>
+          <div className="w-1 h-1 bg-gray-500 rounded-full mr-1"></div>
+          <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
+        </motion.div>
+      </div>
+    ))}
   </div>
 );
 
