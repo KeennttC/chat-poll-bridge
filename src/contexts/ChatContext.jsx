@@ -32,6 +32,10 @@ export const ChatProvider = ({ children }) => {
       setMessages(initialMessages);
     });
 
+    newSocket.on('initialOnlineUsers', (initialOnlineUsers) => {
+      setOnlineUsers(initialOnlineUsers);
+    });
+
     newSocket.on('message', (message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
     });
