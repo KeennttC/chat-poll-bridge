@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useChat } from '../contexts/ChatContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from "@/components/ui/button";
@@ -11,17 +11,15 @@ import { motion } from "framer-motion";
 
 const Chat = () => {
   const [message, setMessage] = useState('');
-  const [showWelcome, setShowWelcome] = useState(true);
   const { messages, sendMessage, typingUsers, setTyping, onlineUsers } = useChat();
   const { user } = useAuth();
+  const scrollAreaRef = useRef(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowWelcome(false);
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, []);
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -59,18 +57,8 @@ const Chat = () => {
         <div className="text-sm text-center">
           Online Users: {onlineUsers.join(', ')}
         </div>
-        {showWelcome && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="text-center mt-2"
-          >
-            Welcome, {user.username}!
-          </motion.div>
-        )}
       </CardHeader>
-      <ScrollArea className="flex-grow p-4">
+      <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
         {messages.map((msg, index) => (
           <MessageBubble key={index} message={msg} isCurrentUser={msg.sender === user.username} />
         ))}

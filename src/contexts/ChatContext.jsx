@@ -11,35 +11,32 @@ export const ChatProvider = ({ children }) => {
   const [typingUsers, setTypingUsers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [socket, setSocket] = useState(null);
-  const auth = useAuth();
+  const { user } = useAuth();
 
   useEffect(() => {
     const newSocket = io('http://localhost:3001');
     setSocket(newSocket);
 
-    return () => newSocket.close();
-  }, []);
-
-  useEffect(() => {
-    if (!socket || !auth || !auth.user) return;
-
-    const handleConnect = () => {
+    newSocket.on('connect', () => {
       console.log('Connected to server');
-      socket.emit('userStatus', { username: auth.user.username, status: 'online' });
-    };
+      if (user) {
+        newSocket.emit('userStatus', { username: user.username, status: 'online' });
+      }
+    });
 
-    const handleDisconnect = () => {
+    newSocket.on('disconnect', () => {
       console.log('Disconnected from server');
-    };
+    });
 
-    socket.on('connect', handleConnect);
-    socket.on('disconnect', handleDisconnect);
+    newSocket.on('initialMessages', (initialMessages) => {
+      setMessages(initialMessages);
+    });
 
-    socket.on('message', (message) => {
+    newSocket.on('message', (message) => {
       setMessages((prevMessages) => [...prevMessages, message]);
     });
 
-    socket.on('typing', ({ username, isTyping }) => {
+    newSocket.on('typing', ({ username, isTyping }) => {
       setTypingUsers((prevTypingUsers) => {
         if (isTyping) {
           return [...new Set([...prevTypingUsers, username])];
@@ -49,7 +46,7 @@ export const ChatProvider = ({ children }) => {
       });
     });
 
-    socket.on('userStatus', ({ username, status }) => {
+    newSocket.on('userStatus', ({ username, status }) => {
       setOnlineUsers((prevOnlineUsers) => {
         if (status === 'online') {
           return [...new Set([...prevOnlineUsers, username])];
@@ -60,28 +57,23 @@ export const ChatProvider = ({ children }) => {
     });
 
     return () => {
-      if (auth.user) {
-        socket.emit('userStatus', { username: auth.user.username, status: 'offline' });
+      if (user) {
+        newSocket.emit('userStatus', { username: user.username, status: 'offline' });
       }
-      socket.off('connect', handleConnect);
-      socket.off('disconnect', handleDisconnect);
-      socket.off('message');
-      socket.off('typing');
-      socket.off('userStatus');
+      newSocket.disconnect();
     };
-  }, [socket, auth]);
+  }, [user]);
 
   const sendMessage = (text) => {
-    if (socket && auth.user) {
-      const message = { text, sender: auth.user.username, timestamp: new Date().toISOString() };
+    if (socket && user) {
+      const message = { text, sender: user.username, timestamp: new Date().toISOString() };
       socket.emit('message', message);
-      setMessages((prevMessages) => [...prevMessages, message]);
     }
   };
 
   const setTyping = (isTyping) => {
-    if (socket && auth.user) {
-      socket.emit('typing', { username: auth.user.username, isTyping });
+    if (socket && user) {
+      socket.emit('typing', { username: user.username, isTyping });
     }
   };
 
