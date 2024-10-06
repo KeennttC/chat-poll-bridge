@@ -7,10 +7,7 @@ import { Badge } from "@/components/ui/badge";
 
 const UserList = () => {
   const { users } = useAuth();
-  const chatContext = useChat();
-
-  // Check if chatContext is available and has onlineUsers
-  const onlineUsers = chatContext?.onlineUsers || [];
+  const { onlineUsers } = useChat();
 
   return (
     <Card className="w-full">

@@ -56,6 +56,12 @@ export const ChatProvider = ({ children }) => {
       });
     });
 
+    // Load messages from local storage on initial load
+    const storedMessages = localStorage.getItem('chatMessages');
+    if (storedMessages) {
+      setMessages(JSON.parse(storedMessages));
+    }
+
     return () => {
       if (user) {
         newSocket.emit('userStatus', { username: user.username, status: 'offline' });
@@ -64,10 +70,17 @@ export const ChatProvider = ({ children }) => {
     };
   }, [user]);
 
+  // Save messages to local storage whenever they change
+  useEffect(() => {
+    localStorage.setItem('chatMessages', JSON.stringify(messages));
+  }, [messages]);
+
   const sendMessage = (text) => {
     if (socket && user) {
       const message = { text, sender: user.username, timestamp: new Date().toISOString() };
       socket.emit('message', message);
+      // Add message locally to ensure it's saved even if offline
+      setMessages((prevMessages) => [...prevMessages, message]);
     }
   };
 
