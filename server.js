@@ -33,6 +33,8 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', userSchema);
 
+const onlineUsers = new Set();
+
 io.on('connection', (socket) => {
   console.log('New client connected');
 
@@ -41,10 +43,7 @@ io.on('connection', (socket) => {
     socket.emit('initialMessages', messages);
   });
 
-  User.find({ status: 'online' }, (err, users) => {
-    if (err) return console.error(err);
-    io.emit('initialOnlineUsers', users.map(user => user.username));
-  });
+  socket.emit('initialOnlineUsers', Array.from(onlineUsers));
 
   socket.on('message', (message) => {
     const newMessage = new Message(message);
@@ -55,6 +54,12 @@ io.on('connection', (socket) => {
   });
 
   socket.on('userStatus', ({ username, status }) => {
+    if (status === 'online') {
+      onlineUsers.add(username);
+    } else {
+      onlineUsers.delete(username);
+    }
+    
     User.findOneAndUpdate(
       { username: username },
       { status: status },
@@ -72,15 +77,16 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
-    // Find the disconnected user and update their status
-    User.findOne({ socketId: socket.id }, (err, user) => {
-      if (user) {
+    User.find({ socketId: socket.id }, (err, users) => {
+      if (err) return console.error(err);
+      users.forEach(user => {
         user.status = 'offline';
         user.save((err) => {
           if (err) return console.error(err);
+          onlineUsers.delete(user.username);
           io.emit('userStatus', { username: user.username, status: 'offline' });
         });
-      }
+      });
     });
   });
 });

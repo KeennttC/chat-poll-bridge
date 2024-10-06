@@ -19,11 +19,11 @@ const UserList = () => {
           {users.map((user, index) => (
             <li key={index} className="flex items-center justify-between">
               <div className="flex items-center">
-                <User className={`mr-2 h-4 w-4 ${onlineUsers.includes(user.username) ? 'text-green-500' : 'text-gray-500'}`} />
+                <User className={`mr-2 h-4 w-4 ${onlineUsers[user.username] ? 'text-green-500' : 'text-gray-500'}`} />
                 {user.username}
               </div>
-              <Badge variant={onlineUsers.includes(user.username) ? "success" : "secondary"}>
-                {onlineUsers.includes(user.username) ? 'Online' : 'Offline'}
+              <Badge variant={onlineUsers[user.username] ? "success" : "secondary"}>
+                {onlineUsers[user.username] ? 'Online' : 'Offline'}
               </Badge>
             </li>
           ))}

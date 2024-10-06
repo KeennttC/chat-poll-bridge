@@ -9,7 +9,7 @@ export const useChat = () => useContext(ChatContext);
 export const ChatProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
-  const [onlineUsers, setOnlineUsers] = useState([]);
+  const [onlineUsers, setOnlineUsers] = useState({});
   const [socket, setSocket] = useState(null);
   const { user } = useAuth();
 
@@ -33,7 +33,11 @@ export const ChatProvider = ({ children }) => {
     });
 
     newSocket.on('initialOnlineUsers', (initialOnlineUsers) => {
-      setOnlineUsers(initialOnlineUsers);
+      const onlineUsersObj = initialOnlineUsers.reduce((acc, username) => {
+        acc[username] = true;
+        return acc;
+      }, {});
+      setOnlineUsers(onlineUsersObj);
     });
 
     newSocket.on('message', (message) => {
@@ -51,13 +55,10 @@ export const ChatProvider = ({ children }) => {
     });
 
     newSocket.on('userStatus', ({ username, status }) => {
-      setOnlineUsers((prevOnlineUsers) => {
-        if (status === 'online') {
-          return [...new Set([...prevOnlineUsers, username])];
-        } else {
-          return prevOnlineUsers.filter((u) => u !== username);
-        }
-      });
+      setOnlineUsers((prevOnlineUsers) => ({
+        ...prevOnlineUsers,
+        [username]: status === 'online'
+      }));
     });
 
     return () => {
@@ -72,7 +73,6 @@ export const ChatProvider = ({ children }) => {
     if (socket && user) {
       const message = { text, sender: user.username, timestamp: new Date().toISOString() };
       socket.emit('message', message);
-      // Immediately add the message to the local state
       setMessages((prevMessages) => [...prevMessages, message]);
     }
   };
