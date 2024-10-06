@@ -72,6 +72,8 @@ export const ChatProvider = ({ children }) => {
     if (socket && user) {
       const message = { text, sender: user.username, timestamp: new Date().toISOString() };
       socket.emit('message', message);
+      // Immediately add the message to the local state
+      setMessages((prevMessages) => [...prevMessages, message]);
     }
   };
 

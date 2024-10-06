@@ -16,10 +16,8 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
 mongoose.connect('mongodb://localhost:27017/chatapp', { useNewUrlParser: true, useUnifiedTopology: true });
 
-// Message Schema
 const messageSchema = new mongoose.Schema({
   text: String,
   sender: String,
@@ -28,7 +26,6 @@ const messageSchema = new mongoose.Schema({
 
 const Message = mongoose.model('Message', messageSchema);
 
-// User Schema
 const userSchema = new mongoose.Schema({
   username: String,
   status: String
@@ -39,16 +36,14 @@ const User = mongoose.model('User', userSchema);
 io.on('connection', (socket) => {
   console.log('New client connected');
 
-  // Send initial messages
   Message.find().sort('-timestamp').limit(50).exec((err, messages) => {
     if (err) return console.error(err);
     socket.emit('initialMessages', messages);
   });
 
-  // Send initial online users
   User.find({ status: 'online' }, (err, users) => {
     if (err) return console.error(err);
-    socket.emit('initialOnlineUsers', users.map(user => user.username));
+    io.emit('initialOnlineUsers', users.map(user => user.username));
   });
 
   socket.on('message', (message) => {
@@ -77,6 +72,16 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
+    // Find the disconnected user and update their status
+    User.findOne({ socketId: socket.id }, (err, user) => {
+      if (user) {
+        user.status = 'offline';
+        user.save((err) => {
+          if (err) return console.error(err);
+          io.emit('userStatus', { username: user.username, status: 'offline' });
+        });
+      }
+    });
   });
 });
 
