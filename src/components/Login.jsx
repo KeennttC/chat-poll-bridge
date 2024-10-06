@@ -16,6 +16,7 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [showCaptcha, setShowCaptcha] = useState(false);
   const [captchaValue, setCaptchaValue] = useState(null);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -37,8 +38,20 @@ const Login = () => {
     return true;
   };
 
+  const handleLogin = async () => {
+    setShowCaptcha(true);
+    if (recaptchaRef.current) {
+      recaptchaRef.current.reset();
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!showCaptcha) {
+      handleLogin();
+      return;
+    }
+
     const isVerified = await verifyCaptcha();
     if (!isVerified) return;
 
@@ -119,17 +132,19 @@ const Login = () => {
                 Forgot password?
               </Button>
             </div>
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey={RECAPTCHA_SITE_KEY}
-              onChange={handleCaptchaChange}
-            />
+            {showCaptcha && (
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={RECAPTCHA_SITE_KEY}
+                onChange={handleCaptchaChange}
+              />
+            )}
             <Button 
               type="submit" 
               className="w-full bg-violet-600 hover:bg-violet-700 text-white"
-              disabled={!captchaValue}
+              disabled={showCaptcha && !captchaValue}
             >
-              {showForgotPassword ? "Reset Password" : "Log in"}
+              {showForgotPassword ? "Reset Password" : (showCaptcha ? "Verify and Log in" : "Log in")}
             </Button>
           </form>
         </CardContent>
