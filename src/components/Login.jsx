@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from "@/components/ui/button";
@@ -8,66 +8,65 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import ReCAPTCHA from "react-google-recaptcha";
-
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || "YOUR_RECAPTCHA_SITE_KEY";
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [showCaptcha, setShowCaptcha] = useState(false);
-  const [captchaValue, setCaptchaValue] = useState(null);
+  const [showChallenge, setShowChallenge] = useState(false);
+  const [challengeAnswer, setChallengeAnswer] = useState('');
+  const [challenge, setChallenge] = useState({ num1: 0, num2: 0 });
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const { login, resetPassword } = useAuth();
   const navigate = useNavigate();
-  const recaptchaRef = useRef();
 
-  const handleCaptchaChange = useCallback((value) => {
-    setCaptchaValue(value);
+  const generateChallenge = useCallback(() => {
+    const num1 = Math.floor(Math.random() * 10);
+    const num2 = Math.floor(Math.random() * 10);
+    setChallenge({ num1, num2 });
   }, []);
 
-  const verifyCaptcha = async () => {
-    if (!captchaValue) {
-      toast.error("Please complete the captcha");
-      return false;
-    }
-    // Here you would typically verify the captcha on your server
-    // For this example, we'll just simulate a successful verification
-    return true;
+  const verifyChallenge = () => {
+    return parseInt(challengeAnswer) === challenge.num1 + challenge.num2;
   };
 
-  const handleLogin = async () => {
-    setShowCaptcha(true);
-    if (recaptchaRef.current) {
-      recaptchaRef.current.reset();
-    }
+  const handleLogin = () => {
+    setShowChallenge(true);
+    generateChallenge();
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!showCaptcha) {
+    if (!showChallenge) {
       handleLogin();
       return;
     }
 
-    const isVerified = await verifyCaptcha();
-    if (!isVerified) return;
+    if (!verifyChallenge()) {
+      toast.error("Incorrect answer. Please try again.");
+      generateChallenge();
+      setChallengeAnswer('');
+      return;
+    }
 
     if (login(username, password)) {
       navigate('/dashboard');
     } else {
       toast.error("Invalid username or password");
-      recaptchaRef.current.reset();
-      setCaptchaValue(null);
+      generateChallenge();
+      setChallengeAnswer('');
     }
   };
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
-    const isVerified = await verifyCaptcha();
-    if (!isVerified) return;
+    if (!verifyChallenge()) {
+      toast.error("Incorrect answer. Please try again.");
+      generateChallenge();
+      setChallengeAnswer('');
+      return;
+    }
 
     if (resetPassword(username, newPassword)) {
       toast.success("Password reset successfully");
@@ -75,8 +74,8 @@ const Login = () => {
     } else {
       toast.error("Failed to reset password. Please check your username.");
     }
-    recaptchaRef.current.reset();
-    setCaptchaValue(null);
+    generateChallenge();
+    setChallengeAnswer('');
   };
 
   return (
@@ -113,6 +112,23 @@ const Login = () => {
                 className="border-violet-300 focus:border-violet-500"
               />
             </div>
+            {showChallenge && (
+              <div className="space-y-2">
+                <Label htmlFor="challenge" className="text-violet-700">Math Challenge</Label>
+                <div className="flex items-center space-x-2">
+                  <span>{challenge.num1} + {challenge.num2} = </span>
+                  <Input
+                    id="challenge"
+                    type="number"
+                    value={challengeAnswer}
+                    onChange={(e) => setChallengeAnswer(e.target.value)}
+                    placeholder="Answer"
+                    required
+                    className="border-violet-300 focus:border-violet-500"
+                  />
+                </div>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Checkbox 
@@ -132,19 +148,11 @@ const Login = () => {
                 Forgot password?
               </Button>
             </div>
-            {showCaptcha && (
-              <ReCAPTCHA
-                ref={recaptchaRef}
-                sitekey={RECAPTCHA_SITE_KEY}
-                onChange={handleCaptchaChange}
-              />
-            )}
             <Button 
               type="submit" 
               className="w-full bg-violet-600 hover:bg-violet-700 text-white"
-              disabled={showCaptcha && !captchaValue}
             >
-              {showForgotPassword ? "Reset Password" : (showCaptcha ? "Verify and Log in" : "Log in")}
+              {showForgotPassword ? "Reset Password" : (showChallenge ? "Verify and Log in" : "Log in")}
             </Button>
           </form>
         </CardContent>
