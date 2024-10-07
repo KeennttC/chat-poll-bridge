@@ -32,7 +32,7 @@ const Login = () => {
     if (username) {
       const code = generateResetCode(username);
       toast.success(`Reset code sent to your email: ${code}`);
-      setResetStep(1);
+      setResetStep(2);
     } else {
       toast.error("Please enter your username first");
     }
@@ -80,8 +80,8 @@ const Login = () => {
       case 2:
         return (
           <form onSubmit={handleResetSubmit} className="space-y-4">
-            <InputField label="Reset Code" id="resetCode" value={resetCode} onChange={setResetCode} />
             <InputField label="New Password" id="newPassword" value={newPassword} onChange={setNewPassword} type="password" />
+            <InputField label="Reset Code" id="resetCode" value={resetCode} onChange={setResetCode} />
             <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white">
               Reset Password
             </Button>
@@ -92,28 +92,6 @@ const Login = () => {
         );
     }
   };
-
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-violet-500 to-purple-600">
-      <Card className="w-full max-w-md bg-white shadow-xl">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-3xl font-bold text-center text-violet-700">
-            {resetStep === 0 ? "Login" : resetStep === 1 ? "Reset Password" : "Enter New Password"}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {renderForm()}
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
-          <Button variant="outline" className="w-full border-violet-500 text-violet-700 hover:bg-violet-100" onClick={() => navigate('/signup')}>
-            Sign up
-          </Button>
-          <LegalLinks />
-        </CardFooter>
-      </Card>
-    </div>
-  );
-};
 
 const InputField = ({ label, id, value, onChange, type = "text" }) => (
   <div className="space-y-2">
@@ -175,5 +153,27 @@ const LegalLinks = () => (
     .
   </div>
 );
+
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-violet-500 to-purple-600">
+      <Card className="w-full max-w-md bg-white shadow-xl">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-3xl font-bold text-center text-violet-700">
+            {resetStep === 0 ? "Login" : resetStep === 1 ? "Reset Password" : "Enter New Password"}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {renderForm()}
+        </CardContent>
+        <CardFooter className="flex flex-col space-y-2">
+          <Button variant="outline" className="w-full border-violet-500 text-violet-700 hover:bg-violet-100" onClick={() => navigate('/signup')}>
+            Sign up
+          </Button>
+          <LegalLinks />
+        </CardFooter>
+      </Card>
+    </div>
+  );
+};
 
 export default Login;
