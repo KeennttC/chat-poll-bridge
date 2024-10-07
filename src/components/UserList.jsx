@@ -3,7 +3,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useChat } from '../contexts/ChatContext';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { User } from 'lucide-react';
-import { Badge } from "@/components/ui/badge";
 
 const UserList = () => {
   const { users } = useAuth();
@@ -19,12 +18,10 @@ const UserList = () => {
           {users.map((user, index) => (
             <li key={index} className="flex items-center justify-between">
               <div className="flex items-center">
-                <User className={`mr-2 h-4 w-4 ${onlineUsers[user.username] ? 'text-green-500' : 'text-gray-500'}`} />
-                {user.username}
+                <User className="mr-2 h-4 w-4 text-gray-500" />
+                <span>{user.username}</span>
               </div>
-              <Badge variant={onlineUsers[user.username] ? "success" : "secondary"}>
-                {onlineUsers[user.username] ? 'Online' : 'Offline'}
-              </Badge>
+              <div className={`w-3 h-3 rounded-full ${onlineUsers[user.username] ? 'bg-green-500' : 'bg-gray-300'}`} />
             </li>
           ))}
         </ul>
