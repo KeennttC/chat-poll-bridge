@@ -43,14 +43,12 @@ export const AuthProvider = ({ children }) => {
 
   const resetPassword = (username, newPassword, resetCode) => {
     if (resetCodes[username] === resetCode) {
-      const userIndex = users.findIndex(u => u.username === username);
-      if (userIndex !== -1) {
-        const updatedUsers = [...users];
-        updatedUsers[userIndex] = { ...updatedUsers[userIndex], password: newPassword };
-        setUsers(updatedUsers);
-        delete resetCodes[username];
-        return true;
-      }
+      const updatedUsers = users.map(u => 
+        u.username === username ? { ...u, password: newPassword } : u
+      );
+      setUsers(updatedUsers);
+      delete resetCodes[username];
+      return true;
     }
     return false;
   };
