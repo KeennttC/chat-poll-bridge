@@ -18,7 +18,8 @@ const Login = () => {
   const [challenge, setChallenge] = useState({ num1: 0, num2: 0 });
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
-  const { login, resetPassword } = useAuth();
+  const [resetCode, setResetCode] = useState('');
+  const { login, resetPassword, generateResetCode } = useAuth();
   const navigate = useNavigate();
 
   const generateChallenge = useCallback(() => {
@@ -68,14 +69,19 @@ const Login = () => {
       return;
     }
 
-    if (resetPassword(username, newPassword)) {
+    if (resetPassword(username, newPassword, resetCode)) {
       toast.success("Password reset successfully");
       setShowForgotPassword(false);
     } else {
-      toast.error("Failed to reset password. Please check your username.");
+      toast.error("Failed to reset password. Please check your username and reset code.");
     }
     generateChallenge();
     setChallengeAnswer('');
+  };
+
+  const handleGenerateResetCode = () => {
+    const code = generateResetCode(username);
+    toast.success(`Reset code generated: ${code}`);
   };
 
   return (
@@ -112,6 +118,42 @@ const Login = () => {
                 className="border-violet-300 focus:border-violet-500"
               />
             </div>
+            {showForgotPassword && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="resetCode" className="text-violet-700">Reset Code</Label>
+                  <Input
+                    id="resetCode"
+                    type="text"
+                    value={resetCode}
+                    onChange={(e) => setResetCode(e.target.value)}
+                    placeholder="Enter reset code"
+                    required
+                    className="border-violet-300 focus:border-violet-500"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="newPassword" className="text-violet-700">New Password</Label>
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    required
+                    className="border-violet-300 focus:border-violet-500"
+                  />
+                </div>
+                <Button 
+                  type="button" 
+                  onClick={handleGenerateResetCode}
+                  className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+                >
+                  Generate Reset Code
+                </Button>
+              </>
+            )}
+
             {showChallenge && (
               <div className="space-y-2">
                 <Label htmlFor="challenge" className="text-violet-700">Math Challenge</Label>
@@ -129,6 +171,7 @@ const Login = () => {
                 </div>
               </div>
             )}
+            
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Checkbox 
