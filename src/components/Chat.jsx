@@ -50,12 +50,14 @@ const Chat = () => {
     );
   }
 
+  const onlineUsersList = Object.keys(onlineUsers).filter(username => onlineUsers[username]);
+
   return (
     <Card className="bg-gray-100 shadow-lg flex flex-col h-[600px]">
       <CardHeader className="bg-purple-600 text-white">
         <CardTitle className="text-2xl font-bold text-center">Chat Room</CardTitle>
         <div className="text-sm text-center">
-          Online Users: {onlineUsers.join(', ')}
+          Online Users: {onlineUsersList.join(', ')}
         </div>
       </CardHeader>
       <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
