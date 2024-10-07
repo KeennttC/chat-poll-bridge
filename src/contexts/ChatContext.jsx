@@ -33,11 +33,7 @@ export const ChatProvider = ({ children }) => {
     });
 
     newSocket.on('initialOnlineUsers', (initialOnlineUsers) => {
-      const onlineUsersObj = initialOnlineUsers.reduce((acc, username) => {
-        acc[username] = true;
-        return acc;
-      }, {});
-      setOnlineUsers(onlineUsersObj);
+      setOnlineUsers(initialOnlineUsers);
     });
 
     newSocket.on('message', (message) => {
@@ -73,7 +69,6 @@ export const ChatProvider = ({ children }) => {
     if (socket && user) {
       const message = { text, sender: user.username, timestamp: new Date().toISOString() };
       socket.emit('message', message);
-      setMessages((prevMessages) => [...prevMessages, message]);
     }
   };
 
