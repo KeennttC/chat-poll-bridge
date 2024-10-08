@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from "@/components/ui/button";
@@ -13,17 +13,11 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [resetStep, setResetStep] = useState(0);
-  const [resetCode, setResetCode] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [showMathChallenge, setShowMathChallenge] = useState(false);
   const [mathChallenge, setMathChallenge] = useState({ question: '', answer: 0 });
   const [userAnswer, setUserAnswer] = useState('');
-  const { login, resetPassword, generateResetCode } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    generateMathChallenge();
-  }, []);
 
   const generateMathChallenge = () => {
     const num1 = Math.floor(Math.random() * 10);
@@ -36,6 +30,15 @@ const Login = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
+    if (!showMathChallenge) {
+      setShowMathChallenge(true);
+      generateMathChallenge();
+      return;
+    }
     if (parseInt(userAnswer) !== mathChallenge.answer) {
       toast.error("Incorrect math answer. Please try again.");
       generateMathChallenge();
@@ -49,85 +52,33 @@ const Login = () => {
     }
   };
 
-  const handleResetRequest = () => {
-    if (username) {
-      const code = generateResetCode(username);
-      toast.success(`Reset code sent to your email: ${code}`);
-      setResetStep(2);
-    } else {
-      toast.error("Please enter your username first");
-    }
-  };
-
-  const handleResetSubmit = (e) => {
-    e.preventDefault();
-    if (resetPassword(username, newPassword, resetCode)) {
-      toast.success("Password reset successfully. You can now log in with your new password.");
-      setResetStep(0);
-      setPassword(newPassword);
-    } else {
-      toast.error("Failed to reset password. Please check your reset code.");
-    }
-  };
-
-  const renderForm = () => {
-    switch (resetStep) {
-      case 0:
-        return (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <InputField label="Username" id="username" value={username} onChange={setUsername} />
-            <InputField label="Password" id="password" value={password} onChange={setPassword} type="password" />
-            <div className="space-y-2">
-              <Label htmlFor="mathChallenge" className="text-violet-700">Human Verification</Label>
-              <div className="flex items-center space-x-2">
-                <span className="text-violet-700">{mathChallenge.question}</span>
-                <Input
-                  id="mathChallenge"
-                  type="number"
-                  value={userAnswer}
-                  onChange={(e) => setUserAnswer(e.target.value)}
-                  placeholder="Answer"
-                  required
-                  className="border-violet-300 focus:border-violet-500 w-20"
-                />
-              </div>
-            </div>
-            <RememberMeCheckbox checked={rememberMe} onChange={setRememberMe} />
-            <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white">
-              Log in
-            </Button>
-            <Button type="button" variant="link" className="w-full text-violet-700 hover:text-violet-900" onClick={() => setResetStep(1)}>
-              Forgot password?
-            </Button>
-          </form>
-        );
-      case 1:
-        return (
-          <form className="space-y-4">
-            <InputField label="Username" id="username" value={username} onChange={setUsername} />
-            <Button onClick={handleResetRequest} className="w-full bg-violet-600 hover:bg-violet-700 text-white">
-              Request Reset Code
-            </Button>
-            <Button variant="link" className="w-full text-violet-700 hover:text-violet-900" onClick={() => setResetStep(0)}>
-              Back to Login
-            </Button>
-          </form>
-        );
-      case 2:
-        return (
-          <form onSubmit={handleResetSubmit} className="space-y-4">
-            <InputField label="New Password" id="newPassword" value={newPassword} onChange={setNewPassword} type="password" />
-            <InputField label="Reset Code" id="resetCode" value={resetCode} onChange={setResetCode} />
-            <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white">
-              Reset Password
-            </Button>
-            <Button type="button" variant="link" className="w-full text-violet-700 hover:text-violet-900" onClick={() => setResetStep(0)}>
-              Back to Login
-            </Button>
-          </form>
-        );
-    }
-  };
+  const renderForm = () => (
+    <form onSubmit={handleLogin} className="space-y-4">
+      <InputField label="Username" id="username" value={username} onChange={setUsername} />
+      <InputField label="Password" id="password" value={password} onChange={setPassword} type="password" minLength={8} />
+      {showMathChallenge && (
+        <div className="space-y-2">
+          <Label htmlFor="mathChallenge" className="text-violet-700">Human Verification</Label>
+          <div className="flex items-center space-x-2">
+            <span className="text-violet-700">{mathChallenge.question}</span>
+            <Input
+              id="mathChallenge"
+              type="number"
+              value={userAnswer}
+              onChange={(e) => setUserAnswer(e.target.value)}
+              placeholder="Answer"
+              required
+              className="border-violet-300 focus:border-violet-500 w-20"
+            />
+          </div>
+        </div>
+      )}
+      <RememberMeCheckbox checked={rememberMe} onChange={setRememberMe} />
+      <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white">
+        {showMathChallenge ? "Verify" : "Log in"}
+      </Button>
+    </form>
+  );
 
   const InputField = ({ label, id, value, onChange, type = "text" }) => (
     <div className="space-y-2">
@@ -194,9 +145,7 @@ const Login = () => {
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-violet-500 to-purple-600">
       <Card className="w-full max-w-md bg-white shadow-xl">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-3xl font-bold text-center text-violet-700">
-            {resetStep === 0 ? "Login" : resetStep === 1 ? "Reset Password" : "Enter New Password"}
-          </CardTitle>
+          <CardTitle className="text-3xl font-bold text-center text-violet-700">Login</CardTitle>
         </CardHeader>
         <CardContent>
           {renderForm()}
