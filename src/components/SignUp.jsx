@@ -15,6 +15,10 @@ const SignUp = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
     try {
       register({ username, password, role: 'student' });
       toast.success("Account created successfully");
@@ -51,8 +55,9 @@ const SignUp = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Choose a password"
+                placeholder="Choose a password (min 8 characters)"
                 required
+                minLength={8}
                 className="border-violet-300 focus:border-violet-500"
               />
             </div>
