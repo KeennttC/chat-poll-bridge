@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,10 @@ const SignUp = () => {
     }
   };
 
+  const handleInputChange = useCallback((setter) => (e) => {
+    setter(e.target.value);
+  }, []);
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-violet-500 to-purple-600">
       <Card className="w-full max-w-md bg-white shadow-xl">
@@ -42,7 +46,7 @@ const SignUp = () => {
                 id="username"
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={handleInputChange(setUsername)}
                 placeholder="Choose a username"
                 required
                 className="border-violet-300 focus:border-violet-500"
@@ -54,7 +58,7 @@ const SignUp = () => {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handleInputChange(setPassword)}
                 placeholder="Choose a password (min 8 characters)"
                 required
                 minLength={8}

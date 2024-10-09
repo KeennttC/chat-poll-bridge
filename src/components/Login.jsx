@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from "@/components/ui/button";
@@ -19,14 +19,14 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const generateMathChallenge = () => {
+  const generateMathChallenge = useCallback(() => {
     const num1 = Math.floor(Math.random() * 10);
     const num2 = Math.floor(Math.random() * 10);
     setMathChallenge({
       question: `${num1} + ${num2} = ?`,
       answer: num1 + num2
     });
-  };
+  }, []);
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -52,10 +52,14 @@ const Login = () => {
     }
   };
 
+  const handleInputChange = useCallback((setter) => (e) => {
+    setter(e.target.value);
+  }, []);
+
   const renderForm = () => (
     <form onSubmit={handleLogin} className="space-y-4">
-      <InputField label="Username" id="username" value={username} onChange={setUsername} />
-      <InputField label="Password" id="password" value={password} onChange={setPassword} type="password" minLength={8} />
+      <InputField label="Username" id="username" value={username} onChange={handleInputChange(setUsername)} />
+      <InputField label="Password" id="password" value={password} onChange={handleInputChange(setPassword)} type="password" minLength={8} />
       {showMathChallenge && (
         <div className="space-y-2">
           <Label htmlFor="mathChallenge" className="text-violet-700">Human Verification</Label>
@@ -65,7 +69,7 @@ const Login = () => {
               id="mathChallenge"
               type="number"
               value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
+              onChange={handleInputChange(setUserAnswer)}
               placeholder="Answer"
               required
               className="border-violet-300 focus:border-violet-500 w-20"
@@ -80,16 +84,17 @@ const Login = () => {
     </form>
   );
 
-  const InputField = ({ label, id, value, onChange, type = "text" }) => (
+  const InputField = ({ label, id, value, onChange, type = "text", minLength }) => (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-violet-700">{label}</Label>
       <Input
         id={id}
         type={type}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={onChange}
         placeholder={`Enter your ${label.toLowerCase()}`}
         required
+        minLength={minLength}
         className="border-violet-300 focus:border-violet-500"
       />
     </div>
