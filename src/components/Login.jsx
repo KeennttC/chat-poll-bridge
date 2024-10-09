@@ -10,7 +10,8 @@ import { toast } from "sonner";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const Login = () => {
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [showMathChallenge, setShowMathChallenge] = useState(false);
   const [mathChallenge, setMathChallenge] = useState({ question: '', answer: 0 });
@@ -29,7 +30,7 @@ const Login = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (formData.password.length < 8) {
+    if (password.length < 8) {
       toast.error("Password must be at least 8 characters long");
       return;
     }
@@ -44,22 +45,21 @@ const Login = () => {
       setUserAnswer('');
       return;
     }
-    if (login(formData.username, formData.password)) {
+    if (login(username, password)) {
       navigate('/dashboard');
     } else {
       toast.error("Invalid username or password");
     }
   };
 
-  const handleInputChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleInputChange = useCallback((setter) => (e) => {
+    setter(e.target.value);
   }, []);
 
   const renderForm = () => (
     <form onSubmit={handleLogin} className="space-y-4">
-      <InputField label="Username" id="username" name="username" value={formData.username} onChange={handleInputChange} />
-      <InputField label="Password" id="password" name="password" value={formData.password} onChange={handleInputChange} type="password" minLength={8} />
+      <InputField label="Username" id="username" value={username} onChange={handleInputChange(setUsername)} />
+      <InputField label="Password" id="password" value={password} onChange={handleInputChange(setPassword)} type="password" minLength={8} />
       {showMathChallenge && (
         <div className="space-y-2">
           <Label htmlFor="mathChallenge" className="text-violet-700">Human Verification</Label>
@@ -69,7 +69,7 @@ const Login = () => {
               id="mathChallenge"
               type="number"
               value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
+              onChange={handleInputChange(setUserAnswer)}
               placeholder="Answer"
               required
               className="border-violet-300 focus:border-violet-500 w-20"
@@ -84,12 +84,11 @@ const Login = () => {
     </form>
   );
 
-  const InputField = ({ label, id, name, value, onChange, type = "text", minLength }) => (
+  const InputField = ({ label, id, value, onChange, type = "text", minLength }) => (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-violet-700">{label}</Label>
       <Input
         id={id}
-        name={name}
         type={type}
         value={value}
         onChange={onChange}
