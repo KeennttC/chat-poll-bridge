@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from "@/components/ui/button";
@@ -8,15 +8,29 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 const SignUp = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+  });
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const handleInputChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  }, []);
+
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (formData.password.length < 8) {
+      toast.error("Password must be at least 8 characters long");
+      return;
+    }
     try {
-      register({ username, password, role: 'student' });
+      register({ username: formData.username, password: formData.password, role: 'student' });
       toast.success("Account created successfully");
       navigate('/');
     } catch (error) {
@@ -36,9 +50,10 @@ const SignUp = () => {
               <Label htmlFor="username" className="text-violet-700">Username</Label>
               <Input
                 id="username"
+                name="username"
                 type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={formData.username}
+                onChange={handleInputChange}
                 placeholder="Choose a username"
                 required
                 className="border-violet-300 focus:border-violet-500"
@@ -48,11 +63,13 @@ const SignUp = () => {
               <Label htmlFor="password" className="text-violet-700">Password</Label>
               <Input
                 id="password"
+                name="password"
                 type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Choose a password"
+                value={formData.password}
+                onChange={handleInputChange}
+                placeholder="Choose a password (min 8 characters)"
                 required
+                minLength={8}
                 className="border-violet-300 focus:border-violet-500"
               />
             </div>
