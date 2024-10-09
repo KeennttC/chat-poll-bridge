@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ const Login = () => {
   const [mathChallenge, setMathChallenge] = useState(null);
   const { login, resetPassword, generateResetCode } = useAuth();
   const navigate = useNavigate();
+  const inputRefs = useRef({});
 
   const handleInputChange = useCallback((e) => {
     const { name, value, type, checked } = e.target;
@@ -70,65 +71,6 @@ const Login = () => {
     }
   };
 
-  const renderForm = () => {
-    switch (resetStep) {
-      case 0:
-        return (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <InputField label="Username" id="username" name="username" value={formData.username} onChange={handleInputChange} />
-            <InputField label="Password" id="password" name="password" value={formData.password} onChange={handleInputChange} type="password" />
-            <RememberMeCheckbox checked={formData.rememberMe} onChange={handleInputChange} />
-            {mathChallenge && (
-              <div className="mt-4">
-                <Label htmlFor="mathChallenge" className="text-violet-700">Human Verification</Label>
-                <p className="text-sm text-gray-600 mb-2">{mathChallenge.question}</p>
-                <Input
-                  id="mathChallenge"
-                  name="mathAnswer"
-                  value={formData.mathAnswer}
-                  onChange={handleInputChange}
-                  placeholder="Enter your answer"
-                  required
-                  className="border-violet-300 focus:border-violet-500"
-                />
-              </div>
-            )}
-            <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white">
-              {mathChallenge ? 'Verify and Log in' : 'Log in'}
-            </Button>
-            <Button type="button" variant="link" className="w-full text-violet-700 hover:text-violet-900" onClick={() => setResetStep(1)}>
-              Forgot password?
-            </Button>
-          </form>
-        );
-      case 1:
-        return (
-          <form className="space-y-4">
-            <InputField label="Username" id="username" value={formData.username} onChange={handleInputChange} />
-            <Button onClick={handleResetRequest} className="w-full bg-violet-600 hover:bg-violet-700 text-white">
-              Request Reset Code
-            </Button>
-            <Button variant="link" className="w-full text-violet-700 hover:text-violet-900" onClick={() => setResetStep(0)}>
-              Back to Login
-            </Button>
-          </form>
-        );
-      case 2:
-        return (
-          <form onSubmit={handleResetSubmit} className="space-y-4">
-            <InputField label="New Password" id="newPassword" value={formData.newPassword} onChange={handleInputChange} type="password" />
-            <InputField label="Reset Code" id="resetCode" value={formData.resetCode} onChange={handleInputChange} />
-            <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white">
-              Reset Password
-            </Button>
-            <Button type="button" variant="link" className="w-full text-violet-700 hover:text-violet-900" onClick={() => setResetStep(0)}>
-              Back to Login
-            </Button>
-          </form>
-        );
-    }
-  };
-
   const InputField = ({ label, id, name, value, onChange, type = "text" }) => (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-violet-700">{label}</Label>
@@ -141,6 +83,7 @@ const Login = () => {
         placeholder={`Enter your ${label.toLowerCase()}`}
         required
         className="border-violet-300 focus:border-violet-500"
+        ref={el => inputRefs.current[name] = el}
       />
     </div>
   );
@@ -157,6 +100,7 @@ const Login = () => {
     </div>
   );
 
+  const LegalLinks = () => (
   const LegalLinks = () => (
     <div className="text-xs text-center text-gray-600">
       By continuing, you agree to our{' '}
@@ -190,6 +134,66 @@ const Login = () => {
       .
     </div>
   );
+
+  const renderForm = () => {
+    switch (resetStep) {
+      case 0:
+        return (
+          <form onSubmit={handleLogin} className="space-y-4">
+            <InputField label="Username" id="username" name="username" value={formData.username} onChange={handleInputChange} />
+            <InputField label="Password" id="password" name="password" value={formData.password} onChange={handleInputChange} type="password" />
+            <RememberMeCheckbox checked={formData.rememberMe} onChange={handleInputChange} />
+            {mathChallenge && (
+              <div className="mt-4">
+                <Label htmlFor="mathChallenge" className="text-violet-700">Human Verification</Label>
+                <p className="text-sm text-gray-600 mb-2">{mathChallenge.question}</p>
+                <Input
+                  id="mathChallenge"
+                  name="mathAnswer"
+                  value={formData.mathAnswer}
+                  onChange={handleInputChange}
+                  placeholder="Enter your answer"
+                  required
+                  className="border-violet-300 focus:border-violet-500"
+                  ref={el => inputRefs.current.mathAnswer = el}
+                />
+              </div>
+            )}
+            <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white">
+              {mathChallenge ? 'Verify and Log in' : 'Log in'}
+            </Button>
+            <Button type="button" variant="link" className="w-full text-violet-700 hover:text-violet-900" onClick={() => setResetStep(1)}>
+              Forgot password?
+            </Button>
+          </form>
+        );
+      case 1:
+        return (
+          <form className="space-y-4">
+            <InputField label="Username" id="username" name="username" value={formData.username} onChange={handleInputChange} />
+            <Button onClick={handleResetRequest} className="w-full bg-violet-600 hover:bg-violet-700 text-white">
+              Request Reset Code
+            </Button>
+            <Button variant="link" className="w-full text-violet-700 hover:text-violet-900" onClick={() => setResetStep(0)}>
+              Back to Login
+            </Button>
+          </form>
+        );
+      case 2:
+        return (
+          <form onSubmit={handleResetSubmit} className="space-y-4">
+            <InputField label="New Password" id="newPassword" name="newPassword" value={formData.newPassword} onChange={handleInputChange} type="password" />
+            <InputField label="Reset Code" id="resetCode" name="resetCode" value={formData.resetCode} onChange={handleInputChange} />
+            <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white">
+              Reset Password
+            </Button>
+            <Button type="button" variant="link" className="w-full text-violet-700 hover:text-violet-900" onClick={() => setResetStep(0)}>
+              Back to Login
+            </Button>
+          </form>
+        );
+    }
+  };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-violet-500 to-purple-600">
