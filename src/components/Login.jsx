@@ -19,7 +19,7 @@ const Login = () => {
     mathAnswer: '',
   });
   const [resetStep, setResetStep] = useState(0);
-  const [mathChallenge, setMathChallenge] = useState(generateMathChallenge());
+  const [mathChallenge, setMathChallenge] = useState(null);
   const { login, resetPassword, generateResetCode } = useAuth();
   const navigate = useNavigate();
 
@@ -33,15 +33,19 @@ const Login = () => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (parseInt(formData.mathAnswer) !== mathChallenge.answer) {
-      toast.error("Incorrect math answer. Please try again.");
+    if (!mathChallenge) {
       setMathChallenge(generateMathChallenge());
-      return;
-    }
-    if (login(formData.username, formData.password)) {
-      navigate('/dashboard');
     } else {
-      toast.error("Invalid username or password");
+      if (parseInt(formData.mathAnswer) !== mathChallenge.answer) {
+        toast.error("Incorrect math answer. Please try again.");
+        setMathChallenge(generateMathChallenge());
+        return;
+      }
+      if (login(formData.username, formData.password)) {
+        navigate('/dashboard');
+      } else {
+        toast.error("Invalid username or password");
+      }
     }
   };
 
@@ -71,11 +75,26 @@ const Login = () => {
       case 0:
         return (
           <form onSubmit={handleLogin} className="space-y-4">
-            <InputField label="Username" id="username" value={formData.username} onChange={handleInputChange} />
-            <InputField label="Password" id="password" value={formData.password} onChange={handleInputChange} type="password" />
+            <InputField label="Username" id="username" name="username" value={formData.username} onChange={handleInputChange} />
+            <InputField label="Password" id="password" name="password" value={formData.password} onChange={handleInputChange} type="password" />
             <RememberMeCheckbox checked={formData.rememberMe} onChange={handleInputChange} />
+            {mathChallenge && (
+              <div className="mt-4">
+                <Label htmlFor="mathChallenge" className="text-violet-700">Human Verification</Label>
+                <p className="text-sm text-gray-600 mb-2">{mathChallenge.question}</p>
+                <Input
+                  id="mathChallenge"
+                  name="mathAnswer"
+                  value={formData.mathAnswer}
+                  onChange={handleInputChange}
+                  placeholder="Enter your answer"
+                  required
+                  className="border-violet-300 focus:border-violet-500"
+                />
+              </div>
+            )}
             <Button type="submit" className="w-full bg-violet-600 hover:bg-violet-700 text-white">
-              Log in
+              {mathChallenge ? 'Verify and Log in' : 'Log in'}
             </Button>
             <Button type="button" variant="link" className="w-full text-violet-700 hover:text-violet-900" onClick={() => setResetStep(1)}>
               Forgot password?
@@ -110,14 +129,15 @@ const Login = () => {
     }
   };
 
-  const InputField = ({ label, id, value, onChange, type = "text" }) => (
+  const InputField = ({ label, id, name, value, onChange, type = "text" }) => (
     <div className="space-y-2">
       <Label htmlFor={id} className="text-violet-700">{label}</Label>
       <Input
         id={id}
+        name={name}
         type={type}
         value={value}
-        onChange={(e) => onChange(e)}
+        onChange={onChange}
         placeholder={`Enter your ${label.toLowerCase()}`}
         required
         className="border-violet-300 focus:border-violet-500"
@@ -181,21 +201,6 @@ const Login = () => {
         </CardHeader>
         <CardContent>
           {renderForm()}
-          {resetStep === 0 && (
-            <div className="mt-4">
-              <Label htmlFor="mathChallenge" className="text-violet-700">Human Verification</Label>
-              <p className="text-sm text-gray-600 mb-2">{mathChallenge.question}</p>
-              <Input
-                id="mathChallenge"
-                name="mathAnswer"
-                value={formData.mathAnswer}
-                onChange={handleInputChange}
-                placeholder="Enter your answer"
-                required
-                className="border-violet-300 focus:border-violet-500"
-              />
-            </div>
-          )}
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
           <Button variant="outline" className="w-full border-violet-500 text-violet-700 hover:bg-violet-100" onClick={() => navigate('/signup')}>
