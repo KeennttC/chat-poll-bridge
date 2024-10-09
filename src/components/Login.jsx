@@ -142,7 +142,7 @@ const Login = () => {
           <form onSubmit={handleLogin} className="space-y-4">
             <InputField label="Username" id="username" name="username" value={formData.username} onChange={handleInputChange} />
             <InputField label="Password" id="password" name="password" value={formData.password} onChange={handleInputChange} type="password" />
-            <RememberMeCheckbox checked={formData.rememberMe} onChange={handleInputChange} />
+            <RememberMeCheckbox checked={formData.rememberMe} onChange={(checked) => setFormData(prev => ({ ...prev, rememberMe: checked }))} />
             {mathChallenge && (
               <div className="mt-4">
                 <Label htmlFor="mathChallenge" className="text-violet-700">Human Verification</Label>
