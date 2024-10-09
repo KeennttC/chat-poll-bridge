@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,6 @@ const SignUp = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters long");
-      return;
-    }
     try {
       register({ username, password, role: 'student' });
       toast.success("Account created successfully");
@@ -27,10 +23,6 @@ const SignUp = () => {
       toast.error(error.message);
     }
   };
-
-  const handleInputChange = useCallback((setter) => (e) => {
-    setter(e.target.value);
-  }, []);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gradient-to-r from-violet-500 to-purple-600">
@@ -46,7 +38,7 @@ const SignUp = () => {
                 id="username"
                 type="text"
                 value={username}
-                onChange={handleInputChange(setUsername)}
+                onChange={(e) => setUsername(e.target.value)}
                 placeholder="Choose a username"
                 required
                 className="border-violet-300 focus:border-violet-500"
@@ -58,10 +50,9 @@ const SignUp = () => {
                 id="password"
                 type="password"
                 value={password}
-                onChange={handleInputChange(setPassword)}
-                placeholder="Choose a password (min 8 characters)"
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Choose a password"
                 required
-                minLength={8}
                 className="border-violet-300 focus:border-violet-500"
               />
             </div>
