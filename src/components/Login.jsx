@@ -101,7 +101,6 @@ const Login = () => {
   );
 
   const LegalLinks = () => (
-  const LegalLinks = () => (
     <div className="text-xs text-center text-gray-600">
       By continuing, you agree to our{' '}
       <Dialog>
