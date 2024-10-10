@@ -17,12 +17,18 @@ const App = () => (
       <ChatProvider>
         <PollProvider>
           <TooltipProvider>
-            <Toaster />
-            <Routes>
-              <Route path="/" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-            </Routes>
+            <div className="container-fluid p-0">
+              <div className="row">
+                <div className="col-12">
+                  <Toaster />
+                  <Routes>
+                    <Route path="/" element={<Login />} />
+                    <Route path="/signup" element={<SignUp />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                  </Routes>
+                </div>
+              </div>
+            </div>
           </TooltipProvider>
         </PollProvider>
       </ChatProvider>
