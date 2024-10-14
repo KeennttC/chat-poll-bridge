@@ -14,7 +14,7 @@ export const ChatProvider = ({ children }) => {
   const { user } = useAuth();
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3001');
+    const newSocket = io('https://your-deployed-server-url.com'); // Replace with your actual deployed server URL
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
