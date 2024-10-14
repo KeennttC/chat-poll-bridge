@@ -1,44 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Helper function to check if the user is authenticated
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    // Helper function to check if the user is modifying their own document
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
-    // Messages collection
-    match /messages/{messageId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.sender == request.auth.uid;
-      allow update, delete: if isAuthenticated() && resource.data.sender == request.auth.uid;
-    }
-
-    // Users collection
-    match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.auth.uid == userId;
-      allow update: if isOwner(userId);
-      allow delete: if false; // Prevent user deletion for safety, adjust if needed
-    }
-
-    // Polls collection (if you implement polls in the future)
-    match /polls/{pollId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
-      allow delete: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
-    }
-
-    // Votes subcollection for polls (if implemented)
-    match /polls/{pollId}/votes/{voteId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if false; // Prevent vote manipulation
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
