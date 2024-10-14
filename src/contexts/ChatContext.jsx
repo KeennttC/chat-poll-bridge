@@ -14,7 +14,7 @@ export const ChatProvider = ({ children }) => {
   const { user } = useAuth();
 
   useEffect(() => {
-    const newSocket = io('https://your-chat-app-server.herokuapp.com'); // Replace with your actual deployed server URL
+    const newSocket = io(process.env.REACT_APP_SERVER_URL || 'http://localhost:3001');
     setSocket(newSocket);
 
     newSocket.on('connect', () => {

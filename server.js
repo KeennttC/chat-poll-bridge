@@ -1,12 +1,12 @@
 const express = require('express');
 const http = require('http');
-const socketIo = require('socket.io');
+const { Server } = require('socket.io');
 const cors = require('cors');
 const mongoose = require('mongoose');
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server, {
+const io = new Server(server, {
   cors: {
     origin: "*", // Allow connections from any origin
     methods: ["GET", "POST"]
@@ -78,12 +78,12 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
-    Object.keys(onlineUsers).forEach(username => {
-      if (onlineUsers[username]) {
-        onlineUsers[username] = false;
-        io.emit('userStatus', { username, status: 'offline' });
-      }
-    });
+    // Find the username associated with this socket
+    const username = Object.keys(onlineUsers).find(key => onlineUsers[key] === socket.id);
+    if (username) {
+      delete onlineUsers[username];
+      io.emit('userStatus', { username, status: 'offline' });
+    }
   });
 });
 
