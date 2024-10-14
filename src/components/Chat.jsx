@@ -50,6 +50,8 @@ const Chat = () => {
     );
   }
 
+  const onlineUsersList = Object.keys(onlineUsers).filter(username => onlineUsers[username]);
+
   return (
     <Card className="bg-gray-100 shadow-lg flex flex-col h-[600px]">
       <CardHeader className="bg-purple-600 text-white">
@@ -94,12 +96,6 @@ const MessageBubble = ({ message, isCurrentUser }) => (
         {format(new Date(message.timestamp), 'HH:mm')}
       </span>
     </div>
-  </div>
-);
-
-const UserAvatar = ({ username }) => (
-  <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-semibold mr-2">
-    {username[0].toUpperCase()}
   </div>
 );
 
