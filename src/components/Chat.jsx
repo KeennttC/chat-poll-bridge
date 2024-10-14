@@ -50,8 +50,6 @@ const Chat = () => {
     );
   }
 
-  const onlineUsersList = Object.keys(onlineUsers).filter(username => onlineUsers[username]);
-
   return (
     <Card className="bg-gray-100 shadow-lg flex flex-col h-[600px]">
       <CardHeader className="bg-purple-600 text-white">
@@ -86,21 +84,16 @@ const Chat = () => {
 
 const MessageBubble = ({ message, isCurrentUser }) => (
   <div className={`flex mb-4 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-    {!isCurrentUser && <UserAvatar username={message.sender} />}
     <div className={`p-3 rounded-lg max-w-[70%] ${
       isCurrentUser 
         ? 'bg-purple-500 text-white rounded-br-none' 
         : 'bg-white text-gray-800 rounded-bl-none'
     }`}>
-      <div className="flex justify-between items-baseline mb-1">
-        <span className="font-semibold">{message.sender}</span>
-        <span className="text-xs opacity-50 ml-2">
-          {format(new Date(message.timestamp), 'HH:mm')}
-        </span>
-      </div>
       <p>{message.text}</p>
+      <span className="text-xs opacity-50 block mt-1">
+        {format(new Date(message.timestamp), 'HH:mm')}
+      </span>
     </div>
-    {isCurrentUser && <UserAvatar username={message.sender} />}
   </div>
 );
 
