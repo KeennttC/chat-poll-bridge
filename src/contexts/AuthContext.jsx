@@ -1,4 +1,7 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { auth, db } from '../firebase/config';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, sendPasswordResetEmail } from 'firebase/auth';
+import { doc, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -7,51 +10,50 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [users, setUsers] = useState([]);
-  const [resetCodes, setResetCodes] = useState({});
 
-  const register = (userData) => {
-    if (users.some(user => user.username === userData.username)) {
-      throw new Error('Username already exists');
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        setUser({ uid: firebaseUser.uid, ...userDoc.data() });
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const register = async (userData) => {
+    const { email, password, username } = userData;
+    try {
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      await setDoc(doc(db, 'users', user.uid), { username, role: 'user' });
+      setUser({ uid: user.uid, username, role: 'user' });
+    } catch (error) {
+      throw new Error(error.message);
     }
-    setUsers([...users, userData]);
   };
 
-  const login = (username, password) => {
-    const user = users.find(u => u.username === username && u.password === password);
-    if (user) {
-      setUser({ username: user.username, role: user.role });
+  const login = async (email, password) => {
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
       return true;
+    } catch (error) {
+      return false;
     }
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-  };
+  const logout = () => signOut(auth);
 
-  const removeUser = (username) => {
+  const removeUser = async (uid) => {
     if (user?.role === 'admin') {
-      setUsers(users.filter(u => u.username !== username));
+      await deleteDoc(doc(db, 'users', uid));
+      setUsers(users.filter(u => u.uid !== uid));
     }
   };
 
-  const generateResetCode = (username) => {
-    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-    setResetCodes({ ...resetCodes, [username]: code });
-    return code;
-  };
-
-  const resetPassword = (username, newPassword, resetCode) => {
-    if (resetCodes[username] === resetCode) {
-      const updatedUsers = users.map(u => 
-        u.username === username ? { ...u, password: newPassword } : u
-      );
-      setUsers(updatedUsers);
-      delete resetCodes[username];
-      return true;
-    }
-    return false;
-  };
+  const resetPassword = (email) => sendPasswordResetEmail(auth, email);
 
   return (
     <AuthContext.Provider value={{ 
@@ -61,8 +63,7 @@ export const AuthProvider = ({ children }) => {
       logout, 
       register, 
       removeUser, 
-      resetPassword, 
-      generateResetCode 
+      resetPassword
     }}>
       {children}
     </AuthContext.Provider>

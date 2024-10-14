@@ -47,6 +47,7 @@
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.1.5",
     "express": "^4.21.0",
+    "firebase": "^10.14.1",
     "framer-motion": "^11.3.9",
     "html-to-image": "^1.11.11",
     "input-otp": "^1.2.4",

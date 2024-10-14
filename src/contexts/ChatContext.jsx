@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import io from 'socket.io-client';
+import { db } from '../firebase/config';
+import { collection, addDoc, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 
 const ChatContext = createContext();
 
@@ -10,74 +11,36 @@ export const ChatProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState({});
-  const [socket, setSocket] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
-    const newSocket = io(import.meta.env.VITE_SERVER_URL || 'http://localhost:3001');
-    setSocket(newSocket);
+    if (!user) return;
 
-    newSocket.on('connect', () => {
-      console.log('Connected to server');
-      if (user) {
-        newSocket.emit('userStatus', { username: user.username, status: 'online' });
-      }
+    const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedMessages = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })).reverse();
+      setMessages(fetchedMessages);
     });
 
-    newSocket.on('disconnect', () => {
-      console.log('Disconnected from server');
-    });
-
-    newSocket.on('initialMessages', (initialMessages) => {
-      setMessages(initialMessages);
-    });
-
-    newSocket.on('initialOnlineUsers', (initialOnlineUsers) => {
-      setOnlineUsers(initialOnlineUsers);
-    });
-
-    newSocket.on('message', (message) => {
-      setMessages((prevMessages) => [...prevMessages, message]);
-    });
-
-    newSocket.on('typing', ({ username, isTyping }) => {
-      setTypingUsers((prevTypingUsers) => {
-        if (isTyping) {
-          return [...new Set([...prevTypingUsers, username])];
-        } else {
-          return prevTypingUsers.filter((u) => u !== username);
-        }
-      });
-    });
-
-    newSocket.on('userStatus', ({ username, status }) => {
-      setOnlineUsers((prevOnlineUsers) => ({
-        ...prevOnlineUsers,
-        [username]: status === 'online'
-      }));
-    });
-
-    return () => {
-      if (user) {
-        newSocket.emit('userStatus', { username: user.username, status: 'offline' });
-      }
-      newSocket.disconnect();
-    };
+    return () => unsubscribe();
   }, [user]);
 
-  const sendMessage = (text) => {
-    if (socket && user) {
-      const message = { text, sender: user.username, timestamp: new Date().toISOString() };
-      socket.emit('message', message);
-      // Immediately add the message to the local state
-      setMessages((prevMessages) => [...prevMessages, message]);
+  const sendMessage = async (text) => {
+    if (user) {
+      const message = { 
+        text, 
+        sender: user.username, 
+        timestamp: new Date().toISOString() 
+      };
+      await addDoc(collection(db, 'messages'), message);
     }
   };
 
   const setTyping = (isTyping) => {
-    if (socket && user) {
-      socket.emit('typing', { username: user.username, isTyping });
-    }
+    // Implement typing indicator with Firestore if needed
   };
 
   return (
