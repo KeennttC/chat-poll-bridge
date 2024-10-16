@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase/config';
-import { collection, addDoc, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send } from 'lucide-react';
 import { format, isValid } from 'date-fns';
+import { toast } from 'sonner';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
@@ -18,7 +19,7 @@ const Chat = () => {
   useEffect(() => {
     if (!user) return;
 
-    const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(100));
+    const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedMessages = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -47,6 +48,7 @@ const Chat = () => {
           timestamp: new Date()
         });
         setNewMessage('');
+        toast.success('Message sent successfully');
       } catch (error) {
         console.error("Error sending message:", error);
         toast.error("Failed to send message. Please try again.");
@@ -111,6 +113,7 @@ const Chat = () => {
       </CardFooter>
     </Card>
   );
+
 };
 
 export default Chat;
