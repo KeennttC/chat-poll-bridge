@@ -18,12 +18,12 @@ const Chat = () => {
   useEffect(() => {
     if (!user) return;
 
-    const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
+    const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(100));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedMessages = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
-        timestamp: doc.data().timestamp?.toDate() // Convert Firestore Timestamp to Date
+        timestamp: doc.data().timestamp?.toDate()
       })).reverse();
       setMessages(fetchedMessages);
     });
@@ -49,7 +49,7 @@ const Chat = () => {
         setNewMessage('');
       } catch (error) {
         console.error("Error sending message:", error);
-        // You could add a toast notification here to inform the user of the error
+        toast.error("Failed to send message. Please try again.");
       }
     }
   };

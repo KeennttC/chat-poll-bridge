@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { auth, db } from '../firebase/config';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -14,9 +14,12 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        const userDocRef = doc(db, 'users', firebaseUser.uid);
+        const userDoc = await getDoc(userDocRef);
         if (userDoc.exists()) {
-          setUser({ uid: firebaseUser.uid, ...userDoc.data() });
+          const userData = userDoc.data();
+          setUser({ uid: firebaseUser.uid, ...userData });
+          await updateDoc(userDocRef, { isOnline: true });
         } else {
           await signOut(auth);
           setUser(null);
@@ -36,9 +39,10 @@ export const AuthProvider = ({ children }) => {
       await setDoc(doc(db, 'users', user.uid), {
         username,
         email,
-        role: 'user'
+        role: 'user',
+        isOnline: true
       });
-      setUser({ uid: user.uid, username, email, role: 'user' });
+      setUser({ uid: user.uid, username, email, role: 'user', isOnline: true });
       return true;
     } catch (error) {
       console.error("Error registering user:", error);
@@ -48,7 +52,8 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const { user } = await signInWithEmailAndPassword(auth, email, password);
+      await updateDoc(doc(db, 'users', user.uid), { isOnline: true });
       return true;
     } catch (error) {
       console.error("Error logging in:", error);
@@ -56,7 +61,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => signOut(auth);
+  const logout = async () => {
+    if (user) {
+      await updateDoc(doc(db, 'users', user.uid), { isOnline: false });
+    }
+    await signOut(auth);
+  };
 
   return (
     <AuthContext.Provider value={{ 

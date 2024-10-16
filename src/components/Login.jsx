@@ -42,11 +42,22 @@ const Login = () => {
         setMathChallenge(generateMathChallenge());
         return;
       }
-      const success = await login(formData.email, formData.password);
-      if (success) {
-        navigate('/dashboard');
-      } else {
-        toast.error("Invalid email or password");
+      try {
+        const success = await login(formData.email, formData.password);
+        if (success) {
+          toast.success("Successfully logged in!");
+          navigate('/dashboard');
+        } else {
+          toast.error("Invalid email or password");
+        }
+      } catch (error) {
+        if (error.code === 'auth/user-not-found') {
+          toast.error("No account found with this email. Please sign up.");
+        } else if (error.code === 'auth/wrong-password') {
+          toast.error("Incorrect password. Please try again.");
+        } else {
+          toast.error("An error occurred during login. Please try again.");
+        }
       }
     }
   };
@@ -103,14 +114,5 @@ const Login = () => {
     </div>
   );
 };
-
-function generateMathChallenge() {
-  const num1 = Math.floor(Math.random() * 10) + 1;
-  const num2 = Math.floor(Math.random() * 10) + 1;
-  return {
-    question: `What is ${num1} + ${num2}?`,
-    answer: num1 + num2
-  };
-}
 
 export default Login;

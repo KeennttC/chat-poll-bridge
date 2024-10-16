@@ -1,16 +1,25 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { useChat } from '../contexts/ChatContext';
+import { db } from '../firebase/config';
+import { collection, onSnapshot } from 'firebase/firestore';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { User } from 'lucide-react';
 
 const UserList = () => {
   const { user } = useAuth();
-  const { onlineUsers } = useChat();
+  const [users, setUsers] = useState([]);
 
-  if (!user) {
-    return null; // or return a loading indicator
-  }
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const userList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setUsers(userList);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <Card className="w-full">
@@ -19,16 +28,15 @@ const UserList = () => {
       </CardHeader>
       <CardContent>
         <ul className="space-y-2">
-          {user && (
-            <li key={user.uid} className="flex items-center justify-between">
+          {users.map((u) => (
+            <li key={u.id} className="flex items-center justify-between">
               <div className="flex items-center">
                 <User className="mr-2 h-4 w-4 text-gray-500" />
-                <span>{user.username}</span>
+                <span>{u.username}</span>
               </div>
-              <div className={`w-3 h-3 rounded-full ${onlineUsers[user.username] ? 'bg-green-500' : 'bg-gray-300'}`} />
+              <div className={`w-3 h-3 rounded-full ${u.isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
             </li>
-          )}
-          {/* If you want to display other users, you'll need to fetch them from Firestore */}
+          ))}
         </ul>
       </CardContent>
     </Card>
