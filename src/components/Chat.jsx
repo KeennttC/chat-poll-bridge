@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase/config';
-import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, getDocs } from 'firebase/firestore';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
@@ -19,17 +19,39 @@ const Chat = () => {
   useEffect(() => {
     if (!user) return;
 
-    const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedMessages = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-        timestamp: doc.data().timestamp?.toDate()
-      })).reverse();
-      setMessages(fetchedMessages);
-    });
+    const fetchMessages = async () => {
+      const messagesCollection = collection(db, 'messages');
+      const q = query(messagesCollection, orderBy('timestamp', 'asc'));
+      
+      try {
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) {
+          // If the collection is empty, create it with a dummy document
+          await addDoc(messagesCollection, {
+            text: 'Welcome to the chat!',
+            sender: 'System',
+            timestamp: new Date()
+          });
+        }
+        
+        // Set up real-time listener
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const fetchedMessages = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            timestamp: doc.data().timestamp?.toDate()
+          }));
+          setMessages(fetchedMessages);
+        });
 
-    return () => unsubscribe();
+        return unsubscribe;
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+        toast.error("Failed to load messages. Please try again.");
+      }
+    };
+
+    fetchMessages();
   }, [user]);
 
   useEffect(() => {
