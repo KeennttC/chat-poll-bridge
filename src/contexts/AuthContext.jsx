@@ -18,7 +18,6 @@ export const AuthProvider = ({ children }) => {
         if (userDoc.exists()) {
           setUser({ uid: firebaseUser.uid, ...userDoc.data() });
         } else {
-          // If user document doesn't exist, sign out the user
           await signOut(auth);
           setUser(null);
         }
@@ -43,7 +42,7 @@ export const AuthProvider = ({ children }) => {
       return true;
     } catch (error) {
       console.error("Error registering user:", error);
-      return false;
+      throw error;
     }
   };
 
@@ -53,7 +52,7 @@ export const AuthProvider = ({ children }) => {
       return true;
     } catch (error) {
       console.error("Error logging in:", error);
-      return false;
+      throw error;
     }
   };
 
