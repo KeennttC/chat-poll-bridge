@@ -24,7 +24,11 @@ const SignUp = () => {
       }
     } catch (error) {
       console.error("Error during sign up:", error);
-      toast.error(error.message || "Failed to create an account");
+      if (error.code === 'auth/email-already-in-use') {
+        toast.error("This email is already in use. Please use a different email or try logging in.");
+      } else {
+        toast.error(error.message || "Failed to create an account");
+      }
     }
   };
 
