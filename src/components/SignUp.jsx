@@ -11,7 +11,7 @@ const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const { register } = useAuth();
+  const { register, login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -25,7 +25,18 @@ const SignUp = () => {
     } catch (error) {
       console.error("Error during sign up:", error);
       if (error.code === 'auth/email-already-in-use') {
-        toast.error("This email is already in use. Please use a different email or try logging in.");
+        toast.error("This email is already in use. Attempting to log in...");
+        try {
+          const loginSuccess = await login(email, password);
+          if (loginSuccess) {
+            toast.success("Logged in with existing account!");
+            navigate('/dashboard');
+          } else {
+            toast.error("Failed to log in with existing account. Please try logging in manually.");
+          }
+        } catch (loginError) {
+          toast.error("Failed to log in with existing account. Please try logging in manually.");
+        }
       } else {
         toast.error(error.message || "Failed to create an account");
       }
