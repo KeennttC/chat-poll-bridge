@@ -1,19 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useChat } from '../contexts/ChatContext';
 import { useAuth } from '../contexts/AuthContext';
+import { db } from '../firebase/config';
+import { collection, addDoc, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { Send } from 'lucide-react';
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Send } from 'lucide-react';
 import { format } from 'date-fns';
-import { motion } from "framer-motion";
 
 const Chat = () => {
-  const [message, setMessage] = useState('');
-  const { messages, sendMessage, typingUsers, setTyping, onlineUsers } = useChat();
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
   const { user } = useAuth();
   const scrollAreaRef = useRef(null);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedMessages = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })).reverse();
+      setMessages(fetchedMessages);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -21,19 +36,15 @@ const Chat = () => {
     }
   }, [messages]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (message.trim() && user) {
-      sendMessage(message);
-      setMessage('');
-      setTyping(false);
-    }
-  };
-
-  const handleTyping = (e) => {
-    setMessage(e.target.value);
-    if (user) {
-      setTyping(e.target.value.length > 0);
+    if (newMessage.trim() && user) {
+      await addDoc(collection(db, 'messages'), {
+        text: newMessage,
+        sender: user.username,
+        timestamp: new Date().toISOString()
+      });
+      setNewMessage('');
     }
   };
 
@@ -50,28 +61,33 @@ const Chat = () => {
     );
   }
 
-  const onlineUsersList = Object.keys(onlineUsers).filter(username => onlineUsers[username]);
-
   return (
     <Card className="bg-gray-100 shadow-lg flex flex-col h-[600px]">
       <CardHeader className="bg-purple-600 text-white">
-        <CardTitle className="text-2xl font-bold text-center">Chat Room</CardTitle>
-        <div className="text-sm text-center">
-          Online Users: {onlineUsersList.join(', ')}
-        </div>
+        <CardTitle className="text-2xl font-bold text-center">Live Chat</CardTitle>
       </CardHeader>
       <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
-        {messages.map((msg, index) => (
-          <MessageBubble key={index} message={msg} isCurrentUser={msg.sender === user.username} />
+        {messages.map((msg) => (
+          <div key={msg.id} className={`flex mb-4 ${msg.sender === user.username ? 'justify-end' : 'justify-start'}`}>
+            <div className={`p-3 rounded-lg max-w-[70%] ${
+              msg.sender === user.username 
+                ? 'bg-purple-500 text-white rounded-br-none' 
+                : 'bg-white text-gray-800 rounded-bl-none'
+            }`}>
+              <p>{msg.text}</p>
+              <span className="text-xs opacity-50 block mt-1">
+                {format(new Date(msg.timestamp), 'HH:mm')}
+              </span>
+            </div>
+          </div>
         ))}
       </ScrollArea>
-      <CardFooter className="border-t bg-white flex-col items-start">
-        <TypingIndicator typingUsers={typingUsers.filter(u => u !== user.username)} />
+      <CardFooter className="border-t bg-white">
         <form onSubmit={handleSubmit} className="flex w-full">
           <Input
             type="text"
-            value={message}
-            onChange={handleTyping}
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
             className="flex-grow mr-2 border-purple-300 focus:border-purple-500"
           />
@@ -83,47 +99,5 @@ const Chat = () => {
     </Card>
   );
 };
-
-const MessageBubble = ({ message, isCurrentUser }) => (
-  <div className={`flex mb-4 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-    <div className={`p-3 rounded-lg max-w-[70%] ${
-      isCurrentUser 
-        ? 'bg-purple-500 text-white rounded-br-none' 
-        : 'bg-white text-gray-800 rounded-bl-none'
-    }`}>
-      <p>{message.text}</p>
-      <span className="text-xs opacity-50 block mt-1">
-        {format(new Date(message.timestamp), 'HH:mm')}
-      </span>
-    </div>
-  </div>
-);
-
-const TypingIndicator = ({ typingUsers }) => (
-  <div className="text-sm text-gray-500 mb-2">
-    {typingUsers.map((user) => (
-      <motion.div
-        key={user}
-        className="flex items-center"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.3 }}
-      >
-        <span>{user} is typing</span>
-        <motion.div
-          className="flex ml-2"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-        >
-          <div className="w-1 h-1 bg-gray-500 rounded-full mr-1"></div>
-          <div className="w-1 h-1 bg-gray-500 rounded-full mr-1"></div>
-          <div className="w-1 h-1 bg-gray-500 rounded-full"></div>
-        </motion.div>
-      </motion.div>
-    ))}
-  </div>
-);
 
 export default Chat;
