@@ -1,14 +1,13 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import InputField from './InputField';
 import RememberMeCheckbox from './RememberMeCheckbox';
 
 const LoginForm = ({ formData, handleInputChange, handleLogin, mathChallenge, inputRefs }) => (
   <form onSubmit={handleLogin} className="space-y-4">
-    <InputField label="Username" id="username" name="username" value={formData.username} onChange={handleInputChange} />
+    <InputField label="Email" id="email" name="email" value={formData.email} onChange={handleInputChange} type="email" />
     <InputField label="Password" id="password" name="password" value={formData.password} onChange={handleInputChange} type="password" />
     <RememberMeCheckbox checked={formData.rememberMe} onChange={(checked) => handleInputChange({ target: { name: 'rememberMe', type: 'checkbox', checked } })} />
     {mathChallenge && (
