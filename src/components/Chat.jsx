@@ -1,14 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase/config';
-import { collection, addDoc, onSnapshot, query, orderBy, getDocs } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send } from 'lucide-react';
-import { format, isValid } from 'date-fns';
-import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
@@ -19,39 +18,16 @@ const Chat = () => {
   useEffect(() => {
     if (!user) return;
 
-    const fetchMessages = async () => {
-      const messagesCollection = collection(db, 'messages');
-      const q = query(messagesCollection, orderBy('timestamp', 'asc'));
-      
-      try {
-        const querySnapshot = await getDocs(q);
-        if (querySnapshot.empty) {
-          // If the collection is empty, create it with a dummy document
-          await addDoc(messagesCollection, {
-            text: 'Welcome to the chat!',
-            sender: 'System',
-            timestamp: new Date()
-          });
-        }
-        
-        // Set up real-time listener
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-          const fetchedMessages = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-            timestamp: doc.data().timestamp?.toDate()
-          }));
-          setMessages(fetchedMessages);
-        });
+    const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedMessages = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })).reverse();
+      setMessages(fetchedMessages);
+    });
 
-        return unsubscribe;
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-        toast.error("Failed to load messages. Please try again.");
-      }
-    };
-
-    fetchMessages();
+    return () => unsubscribe();
   }, [user]);
 
   useEffect(() => {
@@ -63,26 +39,13 @@ const Chat = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (newMessage.trim() && user) {
-      try {
-        await addDoc(collection(db, 'messages'), {
-          text: newMessage,
-          sender: user.username,
-          timestamp: new Date()
-        });
-        setNewMessage('');
-        toast.success('Message sent successfully');
-      } catch (error) {
-        console.error("Error sending message:", error);
-        toast.error("Failed to send message. Please try again.");
-      }
+      await addDoc(collection(db, 'messages'), {
+        text: newMessage,
+        sender: user.username,
+        timestamp: new Date().toISOString()
+      });
+      setNewMessage('');
     }
-  };
-
-  const formatTimestamp = (timestamp) => {
-    if (timestamp && isValid(timestamp)) {
-      return format(timestamp, 'HH:mm');
-    }
-    return '';
   };
 
   if (!user) {
@@ -113,7 +76,7 @@ const Chat = () => {
             }`}>
               <p>{msg.text}</p>
               <span className="text-xs opacity-50 block mt-1">
-                {formatTimestamp(msg.timestamp)}
+                {format(new Date(msg.timestamp), 'HH:mm')}
               </span>
             </div>
           </div>
@@ -135,7 +98,6 @@ const Chat = () => {
       </CardFooter>
     </Card>
   );
-
 };
 
 export default Chat;

@@ -1,12 +1,27 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /messages/{messageId} {
-      allow read, write: if request.auth != null;
+    // Helper function to check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
     }
+
+    // Messages collection
+    match /messages/{messageId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    // Users collection
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if false; // Prevent user deletion for safety, adjust if needed
+    }
+
+    // Catch-all to deny all other access
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

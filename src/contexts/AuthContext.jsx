@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { auth, db } from '../firebase/config';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext();
 
@@ -14,13 +14,11 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        const userDocRef = doc(db, 'users', firebaseUser.uid);
-        const userDoc = await getDoc(userDocRef);
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
         if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUser({ uid: firebaseUser.uid, ...userData });
-          await updateDoc(userDocRef, { isOnline: true });
+          setUser({ uid: firebaseUser.uid, ...userDoc.data() });
         } else {
+          // If user document doesn't exist, sign out the user
           await signOut(auth);
           setUser(null);
         }
@@ -39,34 +37,27 @@ export const AuthProvider = ({ children }) => {
       await setDoc(doc(db, 'users', user.uid), {
         username,
         email,
-        role: 'user',
-        isOnline: true
+        role: 'user'
       });
-      setUser({ uid: user.uid, username, email, role: 'user', isOnline: true });
+      setUser({ uid: user.uid, username, email, role: 'user' });
       return true;
     } catch (error) {
       console.error("Error registering user:", error);
-      throw error;
+      return false;
     }
   };
 
   const login = async (email, password) => {
     try {
-      const { user } = await signInWithEmailAndPassword(auth, email, password);
-      await updateDoc(doc(db, 'users', user.uid), { isOnline: true });
+      await signInWithEmailAndPassword(auth, email, password);
       return true;
     } catch (error) {
       console.error("Error logging in:", error);
-      throw error;
+      return false;
     }
   };
 
-  const logout = async () => {
-    if (user) {
-      await updateDoc(doc(db, 'users', user.uid), { isOnline: false });
-    }
-    await signOut(auth);
-  };
+  const logout = () => signOut(auth);
 
   return (
     <AuthContext.Provider value={{ 
