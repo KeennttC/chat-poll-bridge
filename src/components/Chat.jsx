@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { db } from '../firebase/config';
-import { collection, addDoc, onSnapshot, query, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
@@ -18,13 +19,16 @@ const Chat = () => {
   useEffect(() => {
     if (!user) return;
 
-    const q = query(collection(db, 'messages'), orderBy('timestamp', 'desc'), limit(50));
+    const q = query(collection(db, 'messages'), orderBy('timestamp', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedMessages = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      })).reverse();
+      }));
       setMessages(fetchedMessages);
+    }, (error) => {
+      console.error("Error fetching messages: ", error);
+      toast.error("Failed to load messages. Please try again.");
     });
 
     return () => unsubscribe();
@@ -39,12 +43,18 @@ const Chat = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (newMessage.trim() && user) {
-      await addDoc(collection(db, 'messages'), {
-        text: newMessage,
-        sender: user.username,
-        timestamp: new Date().toISOString()
-      });
-      setNewMessage('');
+      try {
+        await addDoc(collection(db, 'messages'), {
+          text: newMessage,
+          sender: user.username,
+          timestamp: new Date().toISOString()
+        });
+        setNewMessage('');
+        toast.success("Message sent successfully");
+      } catch (error) {
+        console.error("Error sending message: ", error);
+        toast.error("Failed to send message. Please try again.");
+      }
     }
   };
 
