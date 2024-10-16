@@ -11,7 +11,7 @@ export const ChatProvider = ({ children }) => {
   const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState({});
-  const { user } = useAuth() || {}; // Add a fallback empty object
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!user) return;
@@ -49,5 +49,3 @@ export const ChatProvider = ({ children }) => {
     </ChatContext.Provider>
   );
 };
-
-export default ChatProvider;

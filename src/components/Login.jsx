@@ -11,7 +11,7 @@ import LegalLinks from './LegalLinks';
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
     rememberMe: false,
     resetCode: '',
@@ -32,7 +32,7 @@ const Login = () => {
     }));
   }, []);
 
-  const handleLogin = async (e) => {
+  const handleLogin = (e) => {
     e.preventDefault();
     if (!mathChallenge) {
       setMathChallenge(generateMathChallenge());
@@ -42,11 +42,10 @@ const Login = () => {
         setMathChallenge(generateMathChallenge());
         return;
       }
-      const success = await login(formData.email, formData.password);
-      if (success) {
+      if (login(formData.username, formData.password)) {
         navigate('/dashboard');
       } else {
-        toast.error("Invalid email or password");
+        toast.error("Invalid username or password");
       }
     }
   };
