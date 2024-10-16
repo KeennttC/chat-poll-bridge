@@ -6,11 +6,6 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // Helper function to check if the user is modifying their own document
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-
     // Messages collection
     match /messages/{messageId} {
       allow read, write: if isAuthenticated();
@@ -20,23 +15,8 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && request.auth.uid == userId;
-      allow update: if isOwner(userId);
+      allow update: if isAuthenticated() && request.auth.uid == userId;
       allow delete: if false; // Prevent user deletion for safety, adjust if needed
-    }
-
-    // Polls collection (if you implement polls in the future)
-    match /polls/{pollId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
-      allow delete: if isAuthenticated() && resource.data.createdBy == request.auth.uid;
-    }
-
-    // Votes subcollection for polls (if implemented)
-    match /polls/{pollId}/votes/{voteId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if false; // Prevent vote manipulation
     }
 
     // Catch-all to deny all other access
